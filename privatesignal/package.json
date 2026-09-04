@@ -1,0 +1,24 @@
+{
+  "name": "privatesignal",
+  "version": "1.0.0",
+  "description": "PrivateSignal CRE TypeScript Workflow — Confidential/Off-Chain Signal Processing for Chainlink Runtime Environment",
+  "main": "dist/main.js",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "cre workflow build . --target local-simulation --skip-type-checks",
+    "test": "bun test ../tests/privatesignal.test.ts",
+    "test:simulate": "cre workflow simulate . --target local-simulation"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.15.0",
+    "viem": "2.34.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "5.9.3"
+  }
+}

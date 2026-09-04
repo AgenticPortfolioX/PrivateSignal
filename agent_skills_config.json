@@ -1,0 +1,48 @@
+{
+  "chainlink_skills_root": "C:\\Users\\jmgra\\antigravityagents\\.agents\\skills\\chainlink-skills",
+  "skills": [
+    {
+      "name": "chainlink-cre-skill",
+      "path": "chainlink-cre-skill/SKILL.md",
+      "triggers": ["CRE", "Chainlink workflow", "workflow simulate", "workflow deploy", "cre init", "cre-sdk", "DON", "CRON trigger", "HTTP trigger", "EVM log trigger"],
+      "description": "CRE onboarding, workflow generation, CLI/SDK help, triggers (CRON, HTTP, EVM log), HTTP/Confidential HTTP, EVM Read/Write capabilities, secrets, simulation, deployment, and monitoring."
+    },
+    {
+      "name": "chainlink-ccip-skill",
+      "path": "chainlink-ccip-skill/SKILL.md",
+      "triggers": ["CCIP", "cross-chain", "token transfer", "bridge", "CCT", "cross-chain messaging", "lane", "chain selector"],
+      "description": "CCIP cross-chain token transfers and messaging, sender/receiver contracts, CCT token standard, local testing, message status monitoring, and route/lane discovery."
+    },
+    {
+      "name": "chainlink-data-feeds-skill",
+      "path": "chainlink-data-feeds-skill/SKILL.md",
+      "triggers": ["price feed", "data feed", "AggregatorV3Interface", "latestRoundData", "oracle data", "feed address", "L2 sequencer"],
+      "description": "Data Feeds price oracle integration for EVM and non-EVM chains, MVR bundle feeds, SVR/OEV feeds, L2 sequencer uptime checks, and feed monitoring."
+    },
+    {
+      "name": "chainlink-data-streams-skill",
+      "path": "chainlink-data-streams-skill/SKILL.md",
+      "triggers": ["data streams", "Streams Direct", "report decoding", "data-streams-sdk", "WebSocket stream", "low-latency market data", "onchain verification"],
+      "description": "Data Streams REST/WebSocket SDKs, report decoding, on-chain verification, real-time frontend displays, High Availability streaming, and SQLite persistence."
+    },
+    {
+      "name": "chainlink-ace-skill",
+      "path": "chainlink-ace-skill/SKILL.md",
+      "triggers": ["ACE", "Automated Compliance Engine", "policy enforcement", "ERC-3643", "KYC", "AML", "compliance token", "PolicyEngine", "CCID", "sanctions screening"],
+      "description": "ACE core contracts, Policy Management, Cross-Chain Identity, KYC/AML credential registry, regulated tokens (ERC-20/ERC-3643), and managed ACE Platform guidance."
+    },
+    {
+      "name": "chainlink-vrf-skill",
+      "path": "chainlink-vrf-skill/SKILL.md",
+      "triggers": ["VRF", "verifiable randomness", "random number", "requestRandomWords", "fulfillRandomWords", "VRF subscription", "provably fair"],
+      "description": "VRF v2.5 subscription and direct-funding consumers, keyHash and gas lane selection, coordinator address lookup, migration from V2, billing, and supported networks."
+    },
+    {
+      "name": "chainlink-confidential-ai-attester-skill",
+      "path": "chainlink-confidential-ai-attester-skill/SKILL.md",
+      "triggers": ["confidential AI", "TEE inference", "private inference", "attested AI", "AWS Nitro Enclave", "undercollateralized lending", "attested result"],
+      "description": "Confidential AI inference inside a Trusted Execution Environment (TEE). Submit private documents to an LLM and receive a cryptographically attested result without exposing data on-chain. Use cases: undercollateralized lending, KYC/AML, accredited investor verification, proof of reserves."
+    }
+  ],
+  "usage_note": "When a coding agent needs any Chainlink capability, it MUST load the corresponding SKILL.md from the path above before writing code. Never invent Chainlink API patterns from training data alone."
+}

@@ -1,0 +1,8 @@
+{
+  "schedule": "*/30 * * * * *",
+  "signalApiUrl": "https://api.privatesignal.local/v1/feed",
+  "signalId": "SIG-ALPHA-01",
+  "confidenceThresholdBps": 7500,
+  "chainSelector": "16015286601757825753",
+  "receiverContract": "0x1111111111111111111111111111111111111111"
+}
