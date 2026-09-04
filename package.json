@@ -1,23 +1,26 @@
 {
   "name": "privatesignal-workspace",
   "version": "1.0.0",
-  "description": "PrivateSignal Chainlink Runtime Environment (CRE) Workspace",
+  "description": "PrivateSignal — Chainlink Runtime Environment (CRE) Confidential Scoring System",
   "private": true,
   "type": "module",
   "workspaces": [
     "privatesignal"
   ],
   "scripts": {
-    "typecheck": "bun --cwd privatesignal typecheck",
-    "test": "bun test tests/privatesignal.test.ts",
-    "simulate": "cre workflow simulate privatesignal --target local-simulation"
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "simulate": "cre workflow simulate privatesignal --target local-simulation",
+    "deploy:workflow": "bun run src/deploy/createWorkflow.ts"
   },
   "dependencies": {
     "@chainlink/cre-sdk": "^1.15.0",
+    "dotenv": "^16.4.7",
     "viem": "2.34.0",
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@types/bun": "^1.4.1",
     "@types/node": "^22.0.0",
     "typescript": "5.9.3"
   }

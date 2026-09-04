@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node", "bun-types"]
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "types": ["node", "bun"]
   },
-  "include": ["privatesignal/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/**/*.ts", "privatesignal/**/*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "build"]
 }
