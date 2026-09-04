@@ -9,6 +9,57 @@
 import type { NormalizedGraphData, CrossProtocolFeatures } from '../types/scorer'
 
 /**
+ * Calculates concentration score (0 - 100) from token collaterals
+ * 100 = perfectly diversified, 0 = single asset concentration
+ */
+export function calculateConcentrationScore(
+  collateralByToken: Record<string, number>,
+  combinedCollateralValue: number,
+): number {
+  if (combinedCollateralValue <= 0) return 100
+  let maxSingleTokenValue = 0
+  const keys = Object.keys(collateralByToken)
+  for (let i = 0; i < keys.length; i++) {
+    const val = collateralByToken[keys[i]]
+    if (val > maxSingleTokenValue) {
+      maxSingleTokenValue = val
+    }
+  }
+  const maxRatio = maxSingleTokenValue / combinedCollateralValue
+  // If 100% in one token -> score = 25. If <= 20% in max token -> score = 100
+  return Math.max(0, Math.min(100, Math.round((1 - (maxRatio - 0.2) / 0.8) * 100)))
+}
+
+/**
+ * Calculates Health Pressure Index (0 - 100)
+ * Measures safety margin above liquidation threshold (HF 1.0)
+ * HF >= 2.5 -> 100 (Safe)
+ * HF == 1.5 -> 65 (Moderate)
+ * HF == 1.1 -> 20 (Danger)
+ * HF <= 1.0 -> 0 (Liquidatable)
+ */
+export function calculateHealthPressureIndex(rawHF: number, _ltv?: number): number {
+  if (rawHF <= 1.0) {
+    return 0
+  }
+  if (rawHF >= 2.5) {
+    return 100
+  }
+  return Math.round(((rawHF - 1.0) / 1.5) * 100)
+}
+
+/**
+ * Calculates correlated asset ratio for staking derivatives
+ */
+export function calculateAssetCorrelation(
+  correlatedCollateralUSD: number,
+  combinedCollateralValue: number,
+): number {
+  if (combinedCollateralValue <= 0) return 0
+  return Math.min(1, Math.max(0, correlatedCollateralUSD / combinedCollateralValue))
+}
+
+/**
  * Calculates cross-protocol features from normalized Graph position data
  * using pure mathematics.
  */
@@ -48,44 +99,12 @@ export function extractCrossProtocolFeatures(data: NormalizedGraphData): CrossPr
     totalDebtUSD = Number(data.totalDebtUSD)
   }
 
-  // Concentration Score (0 - 100):
-  // 100 = perfectly diversified, 0 = single asset concentration
-  let concentrationScore = 100
-  if (combinedCollateralValue > 0) {
-    let maxSingleTokenValue = 0
-    const keys = Object.keys(collateralByToken)
-    for (let i = 0; i < keys.length; i++) {
-      const val = collateralByToken[keys[i]]
-      if (val > maxSingleTokenValue) {
-        maxSingleTokenValue = val
-      }
-    }
-    const maxRatio = maxSingleTokenValue / combinedCollateralValue
-    // If 100% in one token -> score = 25. If <= 20% in max token -> score = 100
-    concentrationScore = Math.max(0, Math.min(100, Math.round((1 - (maxRatio - 0.2) / 0.8) * 100)))
-  }
-
-  // Health Pressure Index (0 - 100):
-  // Measures safety margin above liquidation threshold (HF 1.0)
-  // HF >= 2.5 -> 100 (Safe)
-  // HF == 1.5 -> 65 (Moderate)
-  // HF == 1.1 -> 20 (Danger)
-  // HF <= 1.0 -> 0 (Liquidatable)
-  const rawHF = Number(data.healthFactor) || 0
-  let healthPressureIndex = 0
-  if (rawHF <= 1.0) {
-    healthPressureIndex = 0
-  } else if (rawHF >= 2.5) {
-    healthPressureIndex = 100
-  } else {
-    healthPressureIndex = Math.round(((rawHF - 1.0) / 1.5) * 100)
-  }
-
-  // Correlated asset ratio (e.g. wstETH / stETH / rETH exposure)
-  let correlatedAssetRatio = 0
-  if (combinedCollateralValue > 0 && Number(data.correlatedCollateralUSD) > 0) {
-    correlatedAssetRatio = Math.min(1, Number(data.correlatedCollateralUSD) / combinedCollateralValue)
-  }
+  const concentrationScore = calculateConcentrationScore(collateralByToken, combinedCollateralValue)
+  const healthPressureIndex = calculateHealthPressureIndex(Number(data.healthFactor) || 0)
+  const correlatedAssetRatio = calculateAssetCorrelation(
+    Number(data.correlatedCollateralUSD) || 0,
+    combinedCollateralValue,
+  )
 
   return {
     combinedCollateralValue,

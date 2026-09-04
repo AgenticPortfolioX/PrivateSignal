@@ -15,7 +15,12 @@ privatesignal/
 ├── agent_skills_config.json      # Inter-agent skill discovery
 ├── package.json                  # Root workspace package configuration
 ├── tsconfig.json                 # Bundler target TypeScript configuration (ES2022, strict)
-├── src/                          # Confidential Core Module
+├── src/                          # Confidential Core & Graph Integration
+│   ├── graph/                    # Multi-protocol Graph robustness & MCP integration
+│   │   ├── queries.ts            # Introspected multi-protocol queries & live endpoints
+│   │   ├── schemaMapper.ts       # Protocol schema normalizer (Messari Lending -> Canonical)
+│   │   ├── nlRouter.ts           # Natural language prompt router -> Graph MCP tool call
+│   │   └── aggregator.ts         # Live data aggregator, 30s TTL cache, & feature extractor
 │   ├── handlers/
 │   │   └── confidentialScorer.ts # TEE WASM confidential risk scoring handler
 │   ├── utils/
@@ -28,6 +33,7 @@ privatesignal/
 │       └── createWorkflow.ts     # CRE production DON deployment & verification script
 ├── tests/
 │   ├── confidentialScorer.test.ts# Confidential core unit tests & privacy boundary verification
+│   ├── graphRobustness.test.ts   # Graph queries, schema mapper, router, & aggregator tests
 │   └── privatesignal.test.ts     # CRE workflow configuration & payload test suite
 └── privatesignal/                # CRE Workflow Module
     ├── main.ts                   # Workflow entrypoint with CRE Runner
@@ -46,11 +52,17 @@ privatesignal/
    - Computes cross-protocol risk features (LTV, collateral concentration, health pressure) using pure math.
    - Strictly enforces the privacy boundary: private weights and intermediate math stay sealed inside the enclave, returning only the final score (0–100), recommendation, reason codes, and an attestation envelope.
 
-2. **BFT Consensus on External Signals**:
+2. **Multi-Protocol Graph Robustness Layer (`src/graph/`)**:
+   - **Introspected Queries**: Queries live decentralized network subgraphs for Aave V3 (`JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk`) and Morpho Blue (`8Lz789DP5VKLXumTMTgygjU2xtuzx8AhbaacgN5PYCAs`) following the Messari Lending schema standard.
+   - **Schema Normalizer**: Unifies protocol positions, handles missing prices with reliable fallbacks, and computes unified health factors.
+   - **Natural Language & MCP Router**: Translates natural language prompts and structured JSON into standard `execute_graph_query` Graph MCP tool calls.
+   - **Live Aggregator & Cache**: Assembles multi-protocol positions, extracts cross-protocol risk features (concentration, debt, health pressure, and liquid staking derivative exposure), and caches results with a 30-second TTL.
+
+3. **BFT Consensus on External Signals**:
    - DON nodes query risk parameters and normalize graph feeds independently.
    - Deterministic aggregation ensures BFT consensus across oracle nodes.
 
-3. **Production DON Deployment (`src/deploy/createWorkflow.ts`)**:
+4. **Production DON Deployment (`src/deploy/createWorkflow.ts`)**:
    - Automates workflow registration and secret provisioning to Chainlink CRE DON.
    - Includes real execution verification with cryptographic attestation receipts.
 

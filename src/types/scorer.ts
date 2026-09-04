@@ -24,10 +24,11 @@ export interface ProtocolPosition {
 
 export interface NormalizedGraphData {
   positions: ProtocolPosition[]
-  healthFactor: number
-  totalCollateralUSD: number
-  totalDebtUSD: number
+  healthFactor?: number
+  totalCollateralUSD?: number
+  totalDebtUSD?: number
   correlatedCollateralUSD?: number
+  crossProtocolFeatures?: CrossProtocolFeatures
 }
 
 export interface QueryParams {
@@ -83,4 +84,8 @@ export interface CrossProtocolFeatures {
   concentrationScore: number
   healthPressureIndex: number
   correlatedAssetRatio: number
+  correlatedAssetFlags?: {
+    isEthDerivativeConcentrated: boolean
+    correlatedAssetRatio: number
+  }
 }
