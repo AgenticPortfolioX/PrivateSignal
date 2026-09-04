@@ -69,3 +69,34 @@ Refuse to suggest or execute mainnet deployment operations.
 - **Arc (Circle L1 testnet) uses USDC as the NATIVE gas token.** All fee
   payments and agent actions are standard native value transfers. NEVER write
   ERC-20 `approve()` / `transfer()` logic for USDC on Arc.
+
+## Scaffolding & Gitignore Security Rules
+- **Order of Operations**: Whenever scaffolding a new CRE workflow directory, `.gitignore` MUST be written **FIRST** before creating `.env` or executing any `git` command.
+- **Strictly No `.env.example`**: Never generate `.env.example` or `example.env` files during scaffolding. Only generate `.env`.
+- **Mandatory Exclusions in `.gitignore`**:
+  - Secrets & Environment: `.env`, `.env*`, `*.env`, `*.local`, `secrets.private.yaml`
+  - Build Artifacts: `dist/`, `build/`, `build/**`, `**/build/`, `**/build/**`, `.cre/`, `*.wasm`, `binary.wasm`, `.cre_build_tmp.js`
+  - Telemetry & Logs: `*.jsonl`, `*.log`, `npm-debug.log*`, `yarn-debug.log*`
+- **Automated Gate Check**: Immediately after creating `.gitignore` and `.env`, run `git check-ignore .env` to verify `.env` is ignored before any files can be staged.
+
+## Git Commit Rules
+- **NEVER** reference any "phase", "prompt", "step", task number, or agent meta-process in commit messages (e.g., do NOT write "Phase 2", "Prompt 3 implementation", "Task completed").
+- Concisely and directly describe **what was built, modified, or uploaded** (e.g., `feat: implement private risk scoring model and TEE attestation verification`, `fix: add build artifact exclusions to gitignore`).
+- Follow standard semantic commit conventions (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`).
+
+## Strict Runtime Boundary Separation
+- **In-DON (TEE / WASM)**: Code inside `src/handlers/` and its direct dependencies MUST be 100% pure TypeScript + `@chainlink/cre-sdk`. Absolutely zero Node.js built-ins (`fs`, `crypto`, `http`, `os`, `path`), zero browser globals (`fetch`, `window`), and zero external libraries that touch the OS or network.
+- **Off-DON (Node.js & Frontend)**: Services in `src/api/`, `src/graph/`, `src/arc/`, and `frontend/` execute in standard Node.js/browser runtimes. They may use standard ecosystem packages (Express, Viem, SQLite, Next.js), but must adhere strictly to the Zero-Leakage Privacy Contract below.
+
+## Zero-Leakage Privacy Contract
+- **Never Log Secrets**: Do NOT include `console.log()` statements that emit raw model weights, policy profiles, custom thresholds, or intermediate calculations.
+- **Enclave Boundary**: Only the final risk score (0-100), recommendation (`safe` | `caution` | `high_risk`), reason codes, and signed cryptographic attestation leave the TEE.
+- **Pre-Redacted Off-Chain Logs**: All external services (API logs, database persistence, console output) must redact sensitive fields before emission.
+
+## Subgraph Schema Ground Truth
+- **No Hallucinated Schemas**: Subgraph query templates in `src/graph/queries.ts` and mappers in `src/graph/schemaMapper.ts` must use verified, live entity structures for Aave V3 and Morpho subgraphs. Never guess or invent GraphQL schema field names.
+
+## Explicit Git Command Authorization
+- Coding agents must **NEVER** run `git add`, `git commit`, or `git push` unless the user explicitly requests a commit or push in their current prompt.
+- Never stage or commit automatically as part of building code, running tests, or performing simulations.
+

@@ -30,6 +30,18 @@ This codebase has **two execution contexts**:
 - ALWAYS run `cre workflow simulate privatesignal --target local-simulation` before any testnet deployment. A first real-DON confidential deployment requires explicit owner approval.
 - Do NOT suggest or execute mainnet deployment operations.
 
+## Git Commit Rules
+- **NEVER** reference any "phase", "prompt", "step", task number, or agent meta-process in commit messages (e.g., do NOT write "Phase 2", "Prompt 3 implementation", "Task completed").
+- Concisely and directly describe **what was built, modified, or uploaded** (e.g., `feat: implement private risk scoring model and TEE attestation verification`, `fix: add build artifact exclusions to gitignore`).
+- Follow standard semantic commit conventions (`feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`).
+
+## Core Project Policies
+- **Strict Runtime Boundaries**: In-DON (`src/handlers/`) is strictly pure TypeScript + `@chainlink/cre-sdk` (no Node built-ins, no browser globals). Off-DON services are standard Node/React but strictly bound by the privacy contract.
+- **Zero-Leakage Privacy Contract**: Never log, persist, or expose private weights, thresholds, policy profiles, or intermediate calculations. Only the final score, recommendation, reason codes, and signed attestation leave the TEE.
+- **Subgraph Schema Ground Truth**: Never hallucinate GraphQL field names; verify live Aave V3 and Morpho subgraph entity structures before mapping.
+- **Explicit Git Authorization**: NEVER run `git add`, `git commit`, or `git push` unless directly requested by the user in the prompt.
+
+
 <!-- cloude-code-toolbox:mcp-skills-awareness-begin -->
 
 ### MCP & Skills awareness (Cloude Code ToolBox)
