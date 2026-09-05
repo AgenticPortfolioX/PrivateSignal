@@ -73,7 +73,10 @@ describe('PrivateSignal CRE Workflow', () => {
     expect(() => configSchema.parse(localConfig)).not.toThrow()
 
     const parsed = configSchema.parse(stagingConfig)
-    expect(parsed.authorizedKeys).toEqual([])
+    expect(Array.isArray(parsed.authorizedKeys)).toBe(true)
+    expect(parsed.authorizedKeys!.length).toBeGreaterThan(0)
+    expect(parsed.authorizedKeys![0].type).toBe('KEY_TYPE_ECDSA_EVM')
+    expect(parsed.authorizedKeys![0].publicKey).toBe('0x748ABdeF0775132E8F941e1513152D5eb02D3a4B')
   })
 
   it('registers exactly one confidential handler with a TEE constraint (no Cron)', () => {
@@ -130,6 +133,38 @@ describe('PrivateSignal CRE Workflow', () => {
     )
     expect(() => loadSecretsFromProvider({} as any)).toThrow('INVALID_ENCLAVE_CONFIG')
     expect(CONFIDENTIAL_SECRET_IDS).toEqual(['MODEL_WEIGHTS', 'POLICY_THRESHOLDS', 'POLICY_PROFILES'])
+  })
+
+  it('gracefully handles batched getSecrets calls from the runtime provider', () => {
+    let requestsSeen: any = null
+    const batchedProvider = {
+      getSecret: () => { throw new Error('should not use single getSecret if getSecrets exists') },
+      getSecrets: (reqs: any) => {
+        requestsSeen = reqs
+        return {
+          result: () => ({
+            MODEL_WEIGHTS: { id: 'MODEL_WEIGHTS', value: JSON.stringify(DEFAULT_MODEL_WEIGHTS) },
+            POLICY_THRESHOLDS: { id: 'POLICY_THRESHOLDS', value: JSON.stringify(BALANCED_THRESHOLDS) },
+            POLICY_PROFILES: { id: 'POLICY_PROFILES', value: JSON.stringify(STANDARD_POLICY_PROFILES) },
+          }),
+        }
+      },
+    }
+
+    const secrets = loadSecretsFromProvider(batchedProvider as any)
+    expect(secrets.modelWeights).toEqual(DEFAULT_MODEL_WEIGHTS)
+    expect(requestsSeen).toEqual([{ id: 'MODEL_WEIGHTS' }, { id: 'POLICY_THRESHOLDS' }, { id: 'POLICY_PROFILES' }])
+
+    // Missing secret throws
+    const missingProvider = {
+      getSecret: () => { throw new Error('should not use single getSecret') },
+      getSecrets: () => ({
+        result: () => ({
+          MODEL_WEIGHTS: { id: 'MODEL_WEIGHTS', value: JSON.stringify(DEFAULT_MODEL_WEIGHTS) },
+        }),
+      }),
+    }
+    expect(() => loadSecretsFromProvider(missingProvider as any)).toThrow('INVALID_ENCLAVE_CONFIG')
   })
 
   it('processes an HTTP evaluation through the confidential TEE handler', async () => {

@@ -1,3 +1,8 @@
 {
-  "authorizedKeys": []
+  "authorizedKeys": [
+    {
+      "type": "KEY_TYPE_ECDSA_EVM",
+      "publicKey": "0x748ABdeF0775132E8F941e1513152D5eb02D3a4B"
+    }
+  ]
 }

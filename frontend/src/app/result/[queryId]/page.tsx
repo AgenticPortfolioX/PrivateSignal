@@ -210,7 +210,7 @@ export default function ResultPage() {
                 <span style={{ color: '#10b981' }}>✓</span> Reason Codes: {data.reasonCodes.join(', ')}
               </li>
               <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#10b981' }}>✓</span> BFT Attestation Digest & Verification Proof
+                <span style={{ color: '#10b981' }}>✓</span> Envelope Integrity Check
               </li>
             </ul>
           </div>

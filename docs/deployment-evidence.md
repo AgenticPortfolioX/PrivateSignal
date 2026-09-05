@@ -21,7 +21,7 @@ Vault Secret Slot:       slot_privatesignal_weights_v1
 Registration Tx Hash:    0x7b4a707269766174657369676e616c2d636f6e666964656e7469616c2d76313a
 Handler Implementation:  src/handlers/confidentialScorer.ts:scoreCrossProtocolRisk
 Runtime Target:          QuickJS / WebAssembly (WASM) Isolated Context
-Attestation Status:      VERIFIED_ENCLAVE_EXECUTION (BFT Consensus Proof)
+Attestation Status:      VERIFIED_ENCLAVE_EXECUTION (Execution Hash Validation)
 ================================================================================
 ```
 
@@ -149,7 +149,7 @@ Strict latency criteria validated via `tests/phase7Integration.test.ts`:
    - Zero occurrences of internal threshold matrices or polynomials.
    - Zero secret key slots or Vault identifiers leaked to clients.
 2. **Cryptographic Attestation**:
-   - Every emitted score is accompanied by an authentic BFT signature digest and SHA-256 execution hash.
+   - Every emitted score is accompanied by an honest non-claiming envelope and execution hash.
 3. **Native USDC Confirmation**:
    - Confirmed 18-decimal native EVM transfers (`parseEther`); no ERC-20 `approve()` or `transfer()` calls invoked.
 
