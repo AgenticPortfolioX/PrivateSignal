@@ -3,12 +3,16 @@ local-simulation:
     workflow-name: "privatesignal-local"
   workflow-artifacts:
     workflow-path: "./main.ts"
-    config-path: "./config.staging.json"
+    config-path: "./config.local.json"
     secrets-path: "../secrets.yaml"
 
 staging-settings:
   user-workflow:
     workflow-name: "privatesignal-staging"
+    # First real deploy targets the Chainlink-hosted PRIVATE (off-chain) registry.
+    # Management/auth flows through the CRE control plane (account creds), not an
+    # on-chain registry on Ethereum mainnet. See `cre registry list`.
+    deployment-registry: "private"
   workflow-artifacts:
     workflow-path: "./main.ts"
     config-path: "./config.staging.json"

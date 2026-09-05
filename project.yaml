@@ -9,6 +9,8 @@ default: &default
       url: ${ETH_SEPOLIA_RPC_URL}
     - chain-name: "ethereum-testnet-sepolia-base-1"
       url: ${BASE_SEPOLIA_RPC_URL}
+    - chain-name: "ethereum-mainnet"
+      url: ${ETH_MAINNET_RPC_URL}
 
 local-simulation: *default
 
@@ -20,5 +22,3 @@ production-settings:
   rpcs:
     - chain-name: "ethereum-mainnet"
       url: ${ETH_MAINNET_RPC_URL}
-    - chain-name: "ethereum-mainnet-base-1"
-      url: ${BASE_MAINNET_RPC_URL}

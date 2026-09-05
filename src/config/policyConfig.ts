@@ -1,8 +1,13 @@
 /**
- * PrivateSignal — Policy Configuration
+ * PrivateSignal — LOCAL (non-confidential) policy mirror
  *
- * Provides standard baseline policy definitions, thresholds, and default weights
- * stored inside Vault DON secrets.
+ * These constants are NOT read by the Chainlink DON path. The DON loads its
+ * model weights, thresholds, and policy profiles from CRE DON secrets via the
+ * runtime secrets provider (see `loadSecretsFromProvider` in
+ * `src/handlers/confidentialScorer.ts`). This module exists only as a clearly
+ * labeled engineering fallback for Node-side helpers and deterministic tests,
+ * and it MUST mirror the secret JSON values stored under MODEL_WEIGHTS,
+ * POLICY_THRESHOLDS, and POLICY_PROFILES so local and deployed behavior agree.
  */
 
 import type { PolicyProfile, PolicyThresholds, Secrets } from '../types/scorer'
@@ -33,18 +38,21 @@ export const STANDARD_POLICY_PROFILES: PolicyProfile[] = [
     name: 'Conservative Risk Policy',
     multiplier: 1.15,
     weightAdjustment: [0.35, 0.25, 0.2, 0.2],
+    thresholds: CONSERVATIVE_THRESHOLDS,
   },
   {
     profileId: 'balanced-v1',
     name: 'Balanced Market Policy',
     multiplier: 1.0,
     weightAdjustment: [0.3, 0.2, 0.2, 0.3],
+    thresholds: BALANCED_THRESHOLDS,
   },
   {
     profileId: 'aggressive-v1',
     name: 'High Yield Capital Efficiency Policy',
     multiplier: 0.85,
     weightAdjustment: [0.25, 0.2, 0.25, 0.3],
+    thresholds: AGGRESSIVE_THRESHOLDS,
   },
 ]
 

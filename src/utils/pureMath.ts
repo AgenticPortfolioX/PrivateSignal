@@ -6,7 +6,112 @@
  * Deterministic math operations only.
  */
 
-import type { NormalizedGraphData, CrossProtocolFeatures } from '../types/scorer'
+import type {
+  NormalizedGraphData,
+  CrossProtocolFeatures,
+  CanonicalPolicyProfileId,
+  RequestablePolicyProfileId,
+} from '../types/scorer'
+
+/**
+ * Normalizes a caller-supplied policy profile id to its canonical form.
+ *
+ * Maps `conservative | conservative-v1` -> `conservative-v1`, etc. Returns
+ * `null` for anything unrecognized so the scorer can fail closed instead of
+ * silently degrading to a default profile.
+ */
+export function normalizePolicyProfileId(
+  input: RequestablePolicyProfileId | string,
+): CanonicalPolicyProfileId | null {
+  switch (input) {
+    case 'conservative':
+    case 'conservative-v1':
+      return 'conservative-v1'
+    case 'balanced':
+    case 'balanced-v1':
+      return 'balanced-v1'
+    case 'aggressive':
+    case 'aggressive-v1':
+      return 'aggressive-v1'
+    default:
+      return null
+  }
+}
+
+/**
+ * FAIL-CLOSED DATA RELIABILITY GATE.
+ *
+ * Decides whether graph data is trustworthy enough to score at all:
+ *
+ * - `malformed`  : not an object / `positions` is not an array.
+ * - `unavailable`: no real exposure could be derived from `positions` AND the
+ *                  caller did not assert `dataComplete`. Missing/empty data is
+ *                  NEVER treated as a clean healthy portfolio.
+ * - `usable`     : at least one position carries material USD exposure, OR the
+ *                  caller explicitly asserted `dataComplete: true` with finite
+ *                  totals (the only path a true zero-position wallet may take).
+ */
+export type GraphDataReliability =
+  | { status: 'usable' }
+  | { status: 'unavailable'; reason: string }
+  | { status: 'malformed'; reason: string }
+
+export function assessGraphDataReliability(data: NormalizedGraphData): GraphDataReliability {
+  if (!data || typeof data !== 'object') {
+    return { status: 'malformed', reason: 'GRAPH_DATA_MALFORMED: graphData is not an object' }
+  }
+  if (!Array.isArray(data.positions)) {
+    return { status: 'malformed', reason: 'GRAPH_DATA_MALFORMED: positions is not an array' }
+  }
+
+  // Sum only entries that carry real, finite, positive USD exposure.
+  let materialCollateralUSD = 0
+  let materialDebtUSD = 0
+  for (let i = 0; i < data.positions.length; i++) {
+    const pos = data.positions[i]
+    if (!pos || typeof pos !== 'object') {
+      return { status: 'malformed', reason: 'GRAPH_DATA_MALFORMED: position entry is not an object' }
+    }
+    if (Array.isArray(pos.collateral)) {
+      for (let j = 0; j < pos.collateral.length; j++) {
+        const v = pos.collateral[j]?.valueUSD
+        if (Number.isFinite(v) && v > 0) materialCollateralUSD += v
+      }
+    }
+    if (Array.isArray(pos.debt)) {
+      for (let k = 0; k < pos.debt.length; k++) {
+        const v = pos.debt[k]?.valueUSD
+        if (Number.isFinite(v) && v > 0) materialDebtUSD += v
+      }
+    }
+  }
+
+  if (materialCollateralUSD > 0 || materialDebtUSD > 0) {
+    return { status: 'usable' }
+  }
+
+  // No exposure derived from positions. Only an explicit, validated
+  // "complete" payload (true zero-position / zero-debt wallet) may proceed.
+  const totalsPresent =
+    Number.isFinite(data.totalCollateralUSD) && Number.isFinite(data.totalDebtUSD)
+
+  if (data.dataComplete === true) {
+    if (totalsPresent) {
+      return { status: 'usable' }
+    }
+    return {
+      status: 'unavailable',
+      reason:
+        'GRAPH_DATA_UNAVAILABLE: dataComplete asserted but totalCollateralUSD/totalDebtUSD totals are missing',
+    }
+  }
+
+  return {
+    status: 'unavailable',
+    reason:
+      'GRAPH_DATA_UNAVAILABLE: no positions carried exposure and no dataComplete assertion was supplied; refusing to score missing data as a healthy portfolio',
+  }
+}
 
 /**
  * Calculates concentration score (0 - 100) from token collaterals
@@ -62,6 +167,10 @@ export function calculateAssetCorrelation(
 /**
  * Calculates cross-protocol features from normalized Graph position data
  * using pure mathematics.
+ *
+ * Callers MUST run `assessGraphDataReliability` first; this function does not
+ * itself reject missing data (the empty-collateral concentration score is
+ * vacuous by design and must not be reachable from an unverified payload).
  */
 export function extractCrossProtocolFeatures(data: NormalizedGraphData): CrossProtocolFeatures {
   let combinedCollateralValue = 0
@@ -116,10 +225,15 @@ export function extractCrossProtocolFeatures(data: NormalizedGraphData): CrossPr
 }
 
 /**
- * Pure-math deterministic hashing function (FNV-1a 32-bit to hex string)
- * Runs in QuickJS without crypto or Node Buffer.
+ * Deterministic, non-cryptographic execution reference (FNV-1a 32-bit expanded
+ * to a 0x-prefixed 64-hex-char string).
+ *
+ * NOT A DIGEST: do not call this "SHA-256" and do not treat it as an
+ * attestation or integrity proof. It is a stable idempotency reference — the
+ * same inputs produce the same string — useful only for matching a score back
+ * to its query inputs. Runs in QuickJS without crypto or Node Buffer.
  */
-export function deterministicHash(input: string): string {
+export function deterministicExecutionRef(input: string): string {
   let hash = 0x811c9dc5
   for (let i = 0; i < input.length; i++) {
     hash ^= input.charCodeAt(i)

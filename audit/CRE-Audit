@@ -1,0 +1,30 @@
+Prompt for Auditor AI:
+
+Please audit the Chainlink CRE (Confidential Runtime Environment) integration for the PrivateSignal project.
+
+Scope Restriction: You must strictly limit your audit to the files that execute inside the Chainlink DON (QuickJS/WASM enclave) or configure the DON deployment.
+
+DO NOT AUDIT the Node.js API server (src/api/*), the off-chain agent loops (src/agents/*), or the test suite (tests/*), as those run in standard Node/Bun environments and are out of scope.
+
+Files to Audit:
+
+Entrypoints & Configuration:
+privatesignal/main.ts
+privatesignal/workflow.ts
+privatesignal/workflow.yaml
+project.yaml (Specifically the target configurations)
+privatesignal/config.staging.json & config.production.json
+Confidential Core Logic (WASM execution):
+src/handlers/confidentialScorer.ts
+src/utils/pureMath.ts
+src/config/policyConfig.ts
+src/types/scorer.ts
+Key Audit Objectives:
+
+QuickJS/WASM Compatibility: Ensure all code within the CRE execution path strictly uses ECMAScript standard libraries. Verify there are absolutely no Node.js dependencies (e.g., crypto, fs, buffer) or browser APIs (window, DOM) imported or used in these files.
+TEE Security & Determinism: Audit confidentialScorer.ts. Verify that the AttestationEnvelope signature matches the expected format, the payload strictly omits sensitive input data (graph inputs), and the graph traversal fails-closed safely on missing/malformed input data.
+Trigger Architecture: Review workflow.ts. Ensure both the HTTPCapability (on-demand API requests) and CronCapability (monitoring) are correctly configured and safely pass data into the unified executeConfidentialScoringWorkflow execution boundary.
+Environment Isolation: Check that environment variables injected via config.staging.json (such as GRAPH_API_KEY) are accessed properly through the CRE env capabilities and never hardcoded.
+Please provide a report detailing any QuickJS compatibility violations, TEE security leaks, or misconfigured CRE targets.
+
+Whenever you are ready to proceed with the actual deploy after the audit, just let me know and I will re-initiate the command!

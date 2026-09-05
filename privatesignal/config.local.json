@@ -1,8 +1,8 @@
 {
-  "schedule": "*/10 * * * * *",
-  "signalApiUrl": "https://api.privatesignal.local/v1/feed",
-  "signalId": "SIG-ALPHA-LOCAL",
-  "confidenceThresholdBps": 7000,
-  "chainSelector": "16015286601757825753",
-  "receiverContract": "0x0000000000000000000000000000000000000001"
+  "authorizedKeys": [
+    {
+      "type": "KEY_TYPE_ECDSA_EVM",
+      "publicKey": "0x748ABdeF0775132E8F941e1513152D5eb02D3a4B"
+    }
+  ]
 }
