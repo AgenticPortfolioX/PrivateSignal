@@ -48,10 +48,43 @@ describe('PrivateSignal CRE Workflow', () => {
     expect(decoded).toBe(samplePayload)
   })
 
-  it('initializes workflow with cron capability trigger', () => {
+  it('initializes workflow with both HTTP (primary) and Cron (secondary) triggers', () => {
     const handlers = initWorkflow(stagingConfig)
     expect(Array.isArray(handlers)).toBe(true)
-    expect(handlers.length).toBe(1)
+    expect(handlers.length).toBe(2)
+  })
+
+  it('processes on-demand HTTP evaluation trigger directly into confidential TEE scoring', async () => {
+    const { onHttpTrigger } = await import('../privatesignal/workflow')
+    const mockRuntime: any = {
+      config: stagingConfig,
+      now: () => new Date(),
+      log: () => {},
+    }
+
+    const payloadInput = JSON.stringify({
+      walletAddress: '0x1111111111111111111111111111111111111111',
+      protocols: ['aave-v3', 'morpho'],
+      policyProfileId: 'conservative',
+      queryId: 'http_req_01',
+      timestamp: 1757000000,
+      graphData: {
+        positions: [],
+        healthFactor: 3.5,
+        totalCollateralUSD: 50000,
+        totalDebtUSD: 10000,
+      },
+    })
+
+    const httpPayload: any = {
+      input: new TextEncoder().encode(payloadInput),
+    }
+
+    const response = await onHttpTrigger(mockRuntime, httpPayload)
+    const parsed = JSON.parse(response)
+    expect(parsed.score).toBeGreaterThanOrEqual(65)
+    expect(parsed.recommendation).toBe('safe')
+    expect(parsed.attestation.verified).toBe(true)
   })
 
   it('encodes receiver contract calldata correctly with viem', () => {
@@ -69,5 +102,27 @@ describe('PrivateSignal CRE Workflow', () => {
 
     expect(callData.startsWith('0x')).toBe(true)
     expect(callData.length).toBeGreaterThan(10)
+  })
+
+  it('executes confidential scoring workflow within TEE boundary', async () => {
+    const { executeConfidentialScoringWorkflow } = await import('../privatesignal/workflow')
+    const verdict = await executeConfidentialScoringWorkflow({
+      walletAddress: '0x1111111111111111111111111111111111111111',
+      protocols: ['aave-v3', 'morpho'],
+      policyProfileId: 'conservative',
+      queryId: 'wf_test_01',
+      timestamp: 1757000000,
+      graphData: {
+        positions: [],
+        healthFactor: 3.5,
+        totalCollateralUSD: 50000,
+        totalDebtUSD: 10000,
+      },
+    })
+
+    expect(verdict.score).toBeGreaterThanOrEqual(65)
+    expect(verdict.recommendation).toBe('safe')
+    expect(verdict.attestation.verified).toBe(true)
+    expect(verdict.attestation.donId).toBe('don-zone-a-production')
   })
 })

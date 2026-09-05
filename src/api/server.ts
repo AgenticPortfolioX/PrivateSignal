@@ -136,8 +136,15 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
       secrets,
     )
 
-    // 6. Verify attestation
+    // 6. Verify attestation strictly (enforce zero un-attested decision egress)
     const attestationSummary = verifyAttestation(scoreOutput.attestation)
+    if (!attestationSummary.valid) {
+      res.status(502).json({
+        error: 'INVALID_ATTESTATION',
+        message: 'The confidential score failed cryptographic attestation verification from the Chainlink CRE DON',
+      })
+      return
+    }
 
     // 7. Store ONLY query metadata in SQLite (zero secret weights / formulas stored)
     saveQueryMetadata({

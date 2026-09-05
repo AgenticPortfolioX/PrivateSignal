@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Shield, CheckCircle2, Activity, ExternalLink, Loader2 } from 'lucide-react'
+import { ArrowLeft, Shield, CheckCircle2, Activity, ExternalLink, Loader2, Lock, Eye } from 'lucide-react'
 import { fetchQueryById } from '../../../lib/api'
 import { ScoreGauge } from '../../../components/ScoreGauge'
 import { RecommendationBadge } from '../../../components/RecommendationBadge'
@@ -172,6 +172,73 @@ export default function ResultPage() {
 
           {/* Attestation Card */}
           <AttestationCard attestationSummary={data.attestationSummary} />
+        </div>
+      </div>
+
+      {/* Operator vs Enclave Privacy Boundary Explanation Panel */}
+      <div className="glass-panel" style={{ padding: '28px', borderRadius: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+          <Shield size={22} style={{ color: '#00d2ff' }} />
+          <div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#f3f6fc' }}>
+              Privacy Boundary: Operator View vs. Enclave View
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '2px' }}>
+              Chainlink CRE hardware enclaves seal proprietary algorithmic evaluation while emitting public, verifiable receipts.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
+          {/* Operator View */}
+          <div style={{ background: 'rgba(7, 9, 14, 0.7)', border: '1px solid rgba(55, 91, 210, 0.2)', borderRadius: '14px', padding: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Eye size={18} style={{ color: '#00d2ff' }} />
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f3f6fc' }}>Public Operator & Audit View</h4>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: 1.5, marginBottom: '12px' }}>
+              Visible to the host node operator, validators, relayers, and on-chain observers:
+            </p>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', color: '#e2e8f0', fontFamily: 'monospace' }}>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#10b981' }}>✓</span> Query ID: {data.queryId}
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#10b981' }}>✓</span> Emitted Score: {data.score} / 100 ({data.recommendation.toUpperCase()})
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#10b981' }}>✓</span> Reason Codes: {data.reasonCodes.join(', ')}
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#10b981' }}>✓</span> BFT Attestation Digest & Verification Proof
+              </li>
+            </ul>
+          </div>
+
+          {/* Enclave View */}
+          <div style={{ background: 'rgba(7, 9, 14, 0.7)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '14px', padding: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Lock size={18} style={{ color: '#10b981' }} />
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f3f6fc' }}>Confidential TEE Enclave (Inside CRE)</h4>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8', lineHeight: 1.5, marginBottom: '12px' }}>
+              Hardware-sealed in isolated memory registers via Vault DON secrets; unobservable by operator:
+            </p>
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', color: '#10b981', fontFamily: 'monospace' }}>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🔒</span> Model Weights: [SEALED PROPRIETARY SECRETS]
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🔒</span> Policy Threshold Matrices: [SEALED IN VAULT DON]
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🔒</span> Intermediate Polynomial Calculations: [SEALED IN TEE]
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🔒</span> Liquid Staking Correlation Weights: [SEALED IN TEE]
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
