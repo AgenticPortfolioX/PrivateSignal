@@ -1,0 +1,271 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 960" width="100%" height="100%" style="background:#07090e; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#07090e" />
+      <stop offset="100%" stop-color="#05070a" />
+    </linearGradient>
+
+    <!-- Card Gradients -->
+    <linearGradient id="blueCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f1d38" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#091122" stop-opacity="0.85" />
+    </linearGradient>
+    <linearGradient id="graphCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18132e" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#0d0a1c" stop-opacity="0.85" />
+    </linearGradient>
+    <linearGradient id="teeCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f1124" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#120716" stop-opacity="0.95" />
+    </linearGradient>
+    <linearGradient id="arcCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f2924" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#071714" stop-opacity="0.85" />
+    </linearGradient>
+
+    <!-- Neon Glow Filters -->
+    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glowRed" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#10b981" />
+    </marker>
+    <marker id="arrowCyan" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#00d2ff" />
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#a855f7" />
+    </marker>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#f59e0b" />
+    </marker>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="100%" height="100%" fill="url(#bgGrad)" />
+  <rect x="0" y="0" width="1200" height="960" fill="none" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- HEADER -->
+  <g transform="translate(60, 45)">
+    <circle cx="20" cy="20" r="18" fill="#375bd2" opacity="0.2" />
+    <path d="M 12 20 L 18 14 L 28 24 L 24 28 Z" fill="#00d2ff" />
+    <text x="50" y="24" font-size="24" font-weight="800" fill="#f8fafc" letter-spacing="-0.5">PrivateSignal <tspan fill="#00d2ff">CRE Confidential Architecture</tspan></text>
+    <text x="50" y="44" font-size="13" font-weight="500" fill="#94a3b8">Decentralized Multi-Protocol Risk Scoring with Chainlink TEE Enclave Isolation &amp; Arc Native USDC Agent Loop</text>
+  </g>
+
+  <!-- LEGEND BADGES (Top Right) -->
+  <g transform="translate(740, 45)">
+    <rect x="0" y="0" width="400" height="42" rx="8" fill="#0f172a" stroke="#1e293b" />
+    <!-- Green line badge -->
+    <line x1="16" y1="21" x2="36" y2="21" stroke="#10b981" stroke-width="2.5" />
+    <circle cx="36" cy="21" r="3" fill="#10b981" />
+    <text x="46" y="25" font-size="11" fill="#cbd5e1" font-weight="600">Public Flow</text>
+
+    <!-- Red dashed badge -->
+    <line x1="130" y1="21" x2="155" y2="21" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3" />
+    <text x="165" y="25" font-size="11" fill="#f87171" font-weight="600">Privacy Boundary (TEE)</text>
+
+    <!-- Purple badge -->
+    <circle cx="320" cy="21" r="5" fill="#a855f7" />
+    <text x="332" y="25" font-size="11" fill="#c084fc" font-weight="600">Attested Signal</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 1: INTERFACE LAYER -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 110)">
+    <rect x="0" y="0" width="1080" height="90" rx="12" fill="url(#blueCard)" stroke="#1e3a8a" stroke-width="1.2" filter="url(#dropShadow)" />
+    <text x="24" y="28" font-size="12" font-weight="700" fill="#38bdf8" text-transform="uppercase" letter-spacing="1">Layer 1: Entry &amp; Interface Layer</text>
+
+    <!-- Node 1.1: Web UI -->
+    <rect x="24" y="38" width="310" height="40" rx="8" fill="#0b1329" stroke="#0284c7" stroke-width="1" />
+    <text x="40" y="63" font-size="13" font-weight="600" fill="#f1f5f9">Web Console <tspan fill="#64748b" font-weight="400">(/query, /result, /agent, /privacy)</tspan></text>
+
+    <!-- Node 1.2: CLI & Demo -->
+    <rect x="360" y="38" width="340" height="40" rx="8" fill="#0b1329" stroke="#0284c7" stroke-width="1" />
+    <text x="376" y="63" font-size="13" font-weight="600" fill="#f1f5f9">CLI &amp; Demo Runner <tspan fill="#64748b" font-weight="400">(runDemo.ts --auto)</tspan></text>
+
+    <!-- Node 1.3: MCP Entry -->
+    <rect x="726" y="38" width="330" height="40" rx="8" fill="#0b1329" stroke="#0284c7" stroke-width="1" />
+    <text x="742" y="63" font-size="13" font-weight="600" fill="#f1f5f9">Graph MCP Agent Entry <tspan fill="#64748b" font-weight="400">(execute_graph_query)</tspan></text>
+  </g>
+
+  <!-- FLOW: L1 -> L2 -->
+  <path d="M 600 200 L 600 230" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrowGreen)" />
+  <text x="610" y="218" font-size="11" fill="#10b981" font-weight="600">Natural Language or Structured Request</text>
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 2: QUERY ROUTER & PRODUCT API -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 235)">
+    <rect x="0" y="0" width="1080" height="95" rx="12" fill="url(#blueCard)" stroke="#1e3a8a" stroke-width="1.2" filter="url(#dropShadow)" />
+    <text x="24" y="28" font-size="12" font-weight="700" fill="#38bdf8" text-transform="uppercase" letter-spacing="1">Layer 2: Natural Language Router &amp; Product API (server.ts)</text>
+
+    <!-- Node 2.1: NL Parser -->
+    <rect x="24" y="40" width="320" height="42" rx="8" fill="#0b1329" stroke="#2563eb" stroke-width="1" />
+    <text x="40" y="66" font-size="13" font-weight="600" fill="#f8fafc">NL Router &amp; Intent Parser <tspan fill="#94a3b8" font-size="11">(Regex &amp; MCP Extract)</tspan></text>
+
+    <!-- Node 2.2: Rate Limiter & Endpoints -->
+    <rect x="370" y="40" width="340" height="42" rx="8" fill="#0b1329" stroke="#2563eb" stroke-width="1" />
+    <text x="386" y="66" font-size="13" font-weight="600" fill="#f8fafc">API Router <tspan fill="#94a3b8" font-size="11">(/api/score, /api/agent/run, 10 req/m)</tspan></text>
+
+    <!-- Node 2.3: SQLite Audit Store -->
+    <rect x="736" y="40" width="320" height="42" rx="8" fill="#0b1329" stroke="#2563eb" stroke-width="1" />
+    <text x="752" y="66" font-size="13" font-weight="600" fill="#f8fafc">SQLite Metadata Store <tspan fill="#ef4444" font-size="11">(Zero Secrets Stored)</tspan></text>
+  </g>
+
+  <!-- FLOW: L2 -> L3 -->
+  <path d="M 600 330 L 600 360" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrowGreen)" />
+  <text x="610" y="348" font-size="11" fill="#10b981" font-weight="600">Standardized Protocol Target Plan</text>
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 3: THE GRAPH ROBUSTNESS LAYER -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 365)">
+    <rect x="0" y="0" width="1080" height="100" rx="12" fill="url(#graphCard)" stroke="#581c87" stroke-width="1.2" filter="url(#dropShadow)" />
+    <text x="24" y="28" font-size="12" font-weight="700" fill="#c084fc" text-transform="uppercase" letter-spacing="1">Layer 3: The Graph Layer (Standardized Subgraphs &amp; Aggregator)</text>
+
+    <!-- Subgraph 1: Aave V3 -->
+    <rect x="24" y="42" width="240" height="45" rx="8" fill="#130d24" stroke="#7e22ce" stroke-width="1" />
+    <text x="40" y="64" font-size="13" font-weight="600" fill="#f8fafc">Aave V3 Subgraph</text>
+    <text x="40" y="78" font-size="10" fill="#94a3b8">Messari Lending Schema (Decentralized)</text>
+
+    <!-- Subgraph 2: Morpho Blue -->
+    <rect x="284" y="42" width="240" height="45" rx="8" fill="#130d24" stroke="#7e22ce" stroke-width="1" />
+    <text x="300" y="64" font-size="13" font-weight="600" fill="#f8fafc">Morpho Blue Subgraph</text>
+    <text x="300" y="78" font-size="10" fill="#94a3b8">Standard Market &amp; Position Schema</text>
+
+    <!-- Component: Schema Mapper -->
+    <rect x="544" y="42" width="240" height="45" rx="8" fill="#130d24" stroke="#7e22ce" stroke-width="1" />
+    <text x="560" y="64" font-size="13" font-weight="600" fill="#f8fafc">Schema Normalizer</text>
+    <text x="560" y="78" font-size="10" fill="#94a3b8">Unified Health Factors &amp; Safe Fallbacks</text>
+
+    <!-- Component: Feature Aggregator -->
+    <rect x="804" y="42" width="252" height="45" rx="8" fill="#130d24" stroke="#7e22ce" stroke-width="1" />
+    <text x="820" y="64" font-size="13" font-weight="600" fill="#f8fafc">30s TTL Feature Aggregator</text>
+    <text x="820" y="78" font-size="10" fill="#94a3b8">LTV, Concentration, Health Pressure</text>
+  </g>
+
+  <!-- FLOW: L3 -> L4 -->
+  <path d="M 600 465 L 600 500" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrowGreen)" />
+  <text x="610" y="485" font-size="11" fill="#10b981" font-weight="600">Normalized Public On-Chain Positions (Collateral &amp; Debt)</text>
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 4: CHAINLINK CRE CONFIDENTIAL CORE (TEE PRIVACY BOUNDARY) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 505)">
+    <!-- OUTER BOUNDARY BOX (RED DASHED) -->
+    <rect x="0" y="0" width="1080" height="155" rx="14" fill="url(#teeCard)" stroke="#ef4444" stroke-width="2.2" stroke-dasharray="8,6" filter="url(#dropShadow)" />
+    
+    <!-- ENCLAVE PRIVACY BOUNDARY LABEL -->
+    <g transform="translate(24, 20)">
+      <rect x="0" y="0" width="260" height="24" rx="4" fill="#7f1d1d" />
+      <text x="8" y="16" font-size="11" font-weight="800" fill="#fecaca" letter-spacing="0.5">SECURE TEE ENCLAVE BOUNDARY</text>
+    </g>
+
+    <!-- Annotation Pill -->
+    <rect x="710" y="14" width="346" height="26" rx="13" fill="#450a0a" stroke="#b91c1c" stroke-width="1" />
+    <text x="724" y="31" font-size="11" font-weight="700" fill="#fca5a5">Private: weights, thresholds, intermediate calculations</text>
+
+    <!-- Sub-Component 4.1: Vault DON Secrets -->
+    <g transform="translate(24, 52)">
+      <rect x="0" y="0" width="310" height="85" rx="8" fill="#180a1c" stroke="#dc2626" stroke-width="1.2" />
+      <text x="16" y="24" font-size="13" font-weight="700" fill="#f87171">Chainlink Vault DON Secrets</text>
+      <text x="16" y="44" font-size="11" fill="#cbd5e1">• cre.capabilities.Secrets</text>
+      <text x="16" y="60" font-size="11" fill="#cbd5e1">• Proprietary Policy Weights (Alpha/Beta)</text>
+      <text x="16" y="76" font-size="11" fill="#cbd5e1">• Zero Key Exposure to Host Node</text>
+    </g>
+
+    <!-- Sub-Component 4.2: TEE Pure-Math Scorer -->
+    <g transform="translate(360, 52)">
+      <rect x="0" y="0" width="360" height="85" rx="8" fill="#240c1f" stroke="#ef4444" stroke-width="1.5" />
+      <text x="16" y="24" font-size="13" font-weight="700" fill="#f87171">Confidential Core Scorer (QuickJS WASM)</text>
+      <text x="16" y="44" font-size="11" fill="#cbd5e1">• Zero Node.js / Browser Globals</text>
+      <text x="16" y="60" font-size="11" fill="#cbd5e1">• Multi-Factor Polynomial Risk Algorithm</text>
+      <text x="16" y="76" font-size="11" fill="#cbd5e1">• Strict Enclave Isolation &amp; Zero Leaks</text>
+    </g>
+
+    <!-- Sub-Component 4.3: Cryptographic Attestation Proof -->
+    <g transform="translate(745, 52)">
+      <rect x="0" y="0" width="310" height="85" rx="8" fill="#180a1c" stroke="#a855f7" stroke-width="1.2" />
+      <text x="16" y="24" font-size="13" font-weight="700" fill="#c084fc">BFT Attestation Egress</text>
+      <text x="16" y="44" font-size="11" fill="#e2e8f0">• Cryptographic Execution Hash</text>
+      <text x="16" y="60" font-size="11" fill="#e2e8f0">• DON Consensus Signature (don-zone-a)</text>
+      <text x="16" y="76" font-size="11" fill="#e2e8f0">• Output: Score (0-100) + Recommendation</text>
+    </g>
+  </g>
+
+  <!-- FLOW: L4 -> L5 (LEAVING TEE) -->
+  <path d="M 600 660 L 600 700" stroke="#a855f7" stroke-width="2.5" marker-end="url(#arrowPurple)" />
+  <rect x="420" y="668" width="360" height="24" rx="12" fill="#2e1065" stroke="#7e22ce" stroke-width="1" />
+  <text x="430" y="684" font-size="11" fill="#d8b4fe" font-weight="700">Attested: Score, recommendation, coarse reasons, DON proof</text>
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 5: ARC AUTONOMOUS AGENT LOOP (CIRCLE L1 NATIVE USDC) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 705)">
+    <rect x="0" y="0" width="1080" height="110" rx="12" fill="url(#arcCard)" stroke="#059669" stroke-width="1.2" filter="url(#dropShadow)" />
+    <text x="24" y="28" font-size="12" font-weight="700" fill="#34d399" text-transform="uppercase" letter-spacing="1">Layer 5: Arc Autonomous Agent Loop (agentLoop.ts)</text>
+
+    <!-- Node 5.1: Agent Wallet & Balance -->
+    <g transform="translate(24, 40)">
+      <rect x="0" y="0" width="320" height="55" rx="8" fill="#04201a" stroke="#10b981" stroke-width="1" />
+      <text x="16" y="24" font-size="13" font-weight="600" fill="#f8fafc">Circle Agent Wallet (Arc Testnet)</text>
+      <text x="16" y="42" font-size="11" fill="#94a3b8">Native USDC Gas Token | Balance Monitor: $20.00</text>
+    </g>
+
+    <!-- Node 5.2: 0.10 USDC Fee Payment -->
+    <g transform="translate(370, 40)">
+      <rect x="0" y="0" width="340" height="55" rx="8" fill="#04201a" stroke="#10b981" stroke-width="1" />
+      <text x="16" y="24" font-size="13" font-weight="600" fill="#f8fafc">Native USDC Query Fee Sponsor</text>
+      <text x="16" y="42" font-size="11" fill="#94a3b8">Standard EVM Native Transfer (0.10 USDC)</text>
+    </g>
+
+    <!-- Node 5.3: Hard Policy Gate -->
+    <g transform="translate(736, 40)">
+      <rect x="0" y="0" width="320" height="55" rx="8" fill="#04201a" stroke="#f59e0b" stroke-width="1.2" />
+      <text x="16" y="24" font-size="13" font-weight="700" fill="#fbbf24">Score-Gated Action Gate</text>
+      <text x="16" y="42" font-size="11" fill="#94a3b8">Score ≥ Threshold ? Permit : Strict Abort</text>
+    </g>
+  </g>
+
+  <!-- FLOW: L5 -> L6 -->
+  <path d="M 600 815 L 600 845" stroke="#10b981" stroke-width="2.5" marker-end="url(#arrowGreen)" />
+  <text x="610" y="834" font-size="11" fill="#10b981" font-weight="600">On-Chain Candidate Action Dispatch (Score ≥ Threshold)</text>
+
+  <!-- ========================================================================= -->
+  <!-- LAYER 6: ON-CHAIN SETTLEMENT (ARC TESTNET - CIRCLE L1) -->
+  <!-- ========================================================================= -->
+  <g transform="translate(60, 850)">
+    <rect x="0" y="0" width="1080" height="65" rx="10" fill="#021f1a" stroke="#047857" stroke-width="1.5" filter="url(#dropShadow)" />
+    <text x="24" y="38" font-size="14" font-weight="700" fill="#6ee7b7">Arc Testnet Settlement (Circle L1):</text>
+    
+    <g transform="translate(300, 16)">
+      <rect x="0" y="0" width="360" height="34" rx="6" fill="#064e3b" stroke="#10b981" />
+      <text x="14" y="22" font-size="12" font-weight="600" fill="#ecfdf5">Conservative Allocation (0.20 native USDC)</text>
+    </g>
+
+    <g transform="translate(680, 16)">
+      <rect x="0" y="0" width="375" height="34" rx="6" fill="#064e3b" stroke="#10b981" />
+      <text x="14" y="22" font-size="12" font-weight="600" fill="#ecfdf5">Yield Strategy Injection (0.50 native USDC)</text>
+    </g>
+  </g>
+
+  <!-- BOTTOM ANNOTATION BANNER -->
+  <g transform="translate(60, 926)">
+    <rect x="0" y="0" width="1080" height="26" rx="4" fill="#0b1329" />
+    <text x="16" y="18" font-size="11" font-weight="600" fill="#38bdf8">Public Outputs: <tspan fill="#94a3b8" font-weight="400">Standardized Graph positions, final risk scores (0-100), coarse recommendations, DON cryptographic attestation hashes, and Arc transaction receipts.</tspan></text>
+  </g>
+</svg>

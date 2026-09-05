@@ -13,6 +13,7 @@
     "simulate": "cre workflow simulate privatesignal --target local-simulation",
     "deploy:workflow": "bun run src/deploy/createWorkflow.ts",
     "api": "bun run src/api/server.ts",
+    "demo": "bun run src/demo/runDemo.ts",
     "dev:frontend": "cd frontend && bun run dev"
   },
   "dependencies": {
