@@ -22,6 +22,9 @@ buildprivatesignal.jsonl
 *.wasm
 .cre_build_tmp.js
 binary.wasm
+.next/
+**/node_modules/
+out/
 
 # Logs
 *.log
