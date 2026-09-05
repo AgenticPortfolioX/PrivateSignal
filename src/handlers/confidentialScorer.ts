@@ -166,12 +166,12 @@ export async function scoreCrossProtocolRisk(
   )
 
   const attestation: AttestationEnvelope = {
-    donId: 'don-zone-a-production',
-    workflowId: 'privatesignal-confidential-v1',
+    donId: 'LOCAL_PROTOTYPE_MODE',
+    workflowId: 'privatesignal-local-harness',
     executionHash,
-    signature: `0xattest_${executionHash.slice(2, 34)}`,
+    signature: 'UNVERIFIED_LOCAL_EXECUTION',
     timestamp: params.timestamp,
-    verified: true,
+    verified: false,
   }
 
   // Return ONLY public envelope (weights, intermediates, and thresholds remain inside TEE)

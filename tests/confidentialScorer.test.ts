@@ -85,7 +85,7 @@ describe('PrivateSignal: Confidential Core Scorer', () => {
     expect(output.score).toBeGreaterThanOrEqual(75)
     expect(output.recommendation).toBe('safe')
     expect(output.reasonCodes).toContain('HEALTH_FACTOR_NOMINAL')
-    expect(output.attestation.verified).toBe(true)
+    expect(output.attestation.verified).toBe(false)
   })
 
   it('scores overleveraged risky positions with "high_risk"', async () => {
@@ -127,8 +127,8 @@ describe('PrivateSignal: Confidential Core Scorer', () => {
     const output2 = await scoreCrossProtocolRisk(mockHealthyParams, conservativeSecrets)
 
     expect(output1.attestation.executionHash).toBe(output2.attestation.executionHash)
-    expect(output1.attestation.workflowId).toBe('privatesignal-confidential-v1')
-    expect(output1.attestation.donId).toBe('don-zone-a-production')
-    expect(output1.attestation.verified).toBe(true)
+    expect(output1.attestation.workflowId).toBe('privatesignal-local-harness')
+    expect(output1.attestation.donId).toBe('LOCAL_PROTOTYPE_MODE')
+    expect(output1.attestation.verified).toBe(false)
   })
 })

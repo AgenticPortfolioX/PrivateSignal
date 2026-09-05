@@ -57,7 +57,7 @@ export interface GatedActionResult {
   score: number
   threshold: number
   passed: boolean
-  status: 'EXECUTED_ON_ARC' | 'BLOCKED_BY_RISK_POLICY'
+  status: 'EXECUTED_ON_ARC' | 'BLOCKED_BY_RISK_POLICY' | 'SIMULATED_DRY_RUN'
   transactionHash?: Hash
   amountUSDC: number
   destination: string
@@ -109,8 +109,7 @@ export async function executeScoreGatedAction(
       score,
       threshold,
       passed: true,
-      status: 'EXECUTED_ON_ARC',
-      transactionHash: '0x7b4a_simulated_dry_run_hash',
+      status: 'SIMULATED_DRY_RUN',
       amountUSDC: action.amountUSDC,
       destination: action.recipient,
       timestamp: now,

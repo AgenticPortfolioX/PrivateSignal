@@ -1,0 +1,299 @@
+You are a senior protocol QA / security-minded test engineer.
+
+Your job is to perform robust, top-to-bottom testing of PrivateSignal, a confidential cross-protocol risk oracle.
+
+Do not redesign the product.
+Do not add features.
+Do not weaken the architecture.
+Find breaks, gaps, false claims, flaky paths, and demo failures.
+
+==================================================
+PRODUCT TRUTH TO PROTECT
+==================================================
+
+PrivateSignal must remain:
+
+1. Live multi-protocol data from The Graph using standardized schemas
+2. Private scoring model inside a Chainlink CRE Confidential Workflow (TEE)
+3. Only an attested score/recommendation leaves the enclave
+4. Arc agent pays USDC and can act only if the score clears a hard threshold
+
+One-line truth:
+Public Graph data in → private model in TEE → attested score out → Arc agent pays and is gated by that score.
+
+If any test path violates that truth, mark it as a critical failure.
+
+==================================================
+TESTING MISSION
+==================================================
+
+Test the system from top to bottom:
+
+1. Natural language / MCP query entry
+2. Graph multi-protocol ingestion and normalization
+3. Confidential CRE scoring path
+4. Attestation / result integrity
+5. API and persistence
+6. Frontend critical flows
+7. Arc payment + allow/deny gating
+8. End-to-end demo scenarios
+9. Failure modes, privacy boundary leaks, and false-green paths
+
+Prefer real live paths over mocks.
+Mocks are allowed only for isolated unit tests, never as proof that the judged path works.
+
+We have full CRE deployment access.
+Prefer deployed confidential workflow evidence over simulation.
+If deployment is blocked, document the blocker precisely and only then use simulation fallback.
+
+==================================================
+HARD REQUIREMENTS TO VERIFY
+==================================================
+
+CHAINLINK / CONFIDENTIAL PATH
+- Real confidential TEE handler is used
+- Private model weights and/or thresholds are loaded as secrets inside the enclave
+- Actual score computation happens inside the enclave
+- No parallel public scoring path can produce the judged decision outside the TEE
+- Application core depends on the attested score
+- Deployed CRE workflow evidence exists, or a documented blocker with fallback
+- Operator/enclave boundary is real, not cosmetic
+
+THE GRAPH
+- At least two protocols through the same standardized query pattern
+- Score includes at least one explicit cross-protocol feature:
+  - combined exposure
+  - collateral concentration across protocols
+  - multi-protocol health pressure
+- Primary judged entry path is natural language or Subgraph MCP
+- Live Graph provider data on the judged path
+- No mocks on the qualification path
+
+ARC
+- Real USDC payment on Arc testnet
+- Score is a binding gate, not advisory
+- Both outcomes work:
+  - low score → action blocked
+  - high score → action executes
+- Missing either path is a failure
+- Arc remains a consumer of the oracle, not a second product
+
+RESULT / PRIVACY
+- Result payload stays minimal:
+  - score
+  - recommendation
+  - coarse reason codes
+  - attestation metadata
+  - protocols considered
+  - query id
+  - timestamp
+- Never expose model weights, private thresholds, or full feature vectors
+- Logs and API responses must not leak sealed values
+
+==================================================
+TEST PLAN TO EXECUTE
+==================================================
+
+A. REPO AND CLAIM AUDIT
+1. Read README, workflow files, handler code, Graph layer, Arc layer, API, frontend.
+2. Extract every major claim the project makes.
+3. Map each claim to:
+   - code path
+   - test coverage
+   - live evidence
+   - gap / risk
+4. Flag any README claim that is stronger than the implementation.
+
+B. UNIT / COMPONENT TESTS
+Run and extend tests where needed for:
+- confidential scorer pure math
+- privacy boundary
+- Graph query construction
+- schema mapping
+- NL/MCP routing
+- aggregator cross-protocol features
+- attestation verification helper
+- Arc allow/deny gate logic
+- API validation and redaction
+
+For every component, verify both happy path and failure path.
+
+C. CONFIDENTIAL SCORING ROBUSTNESS
+Test:
+1. Same public inputs + same sealed policy => deterministic/stable score behavior
+2. Different policy profiles change outcomes as expected
+3. Missing secrets fail closed, not open
+4. Malformed Graph features fail safely
+5. Extreme values do not crash scoring
+6. No public bypass route returns a usable “official” score outside confidential path
+7. Attestation metadata is present and verified before downstream action dependence
+
+D. GRAPH ROBUSTNESS
+Test:
+1. Live query success for protocol A
+2. Live query success for protocol B
+3. Shared schema normalization across both
+4. Cross-protocol aggregation actually affects score
+5. NL/MCP prompt routes into real structured query path
+6. Bad wallet / empty positions / partial protocol data handled safely
+7. No silent fallback to fake data on judged path
+
+E. API ROBUSTNESS
+Test:
+1. /score or equivalent request validation
+2. Auth/rate-limit behavior if present
+3. Response redaction
+4. Persistence stores only safe metadata
+5. Failed upstream Graph or CRE paths return clean errors
+6. Attested result is required for success responses used by agent flow
+
+F. ARC AGENT LOOP
+Test:
+1. Balance read works
+2. Fee payment path works
+3. Low score blocks action
+4. High score allows action
+5. Blocked path spends no restricted action funds
+6. Allowed path emits tx evidence
+7. Gate cannot be skipped by calling action executor directly without valid attested score
+8. Replayed / tampered score is rejected if verification exists
+
+G. END-TO-END DEMO PATHS
+Execute and verify both:
+
+Scenario 1: ALLOW
+- NL prompt for healthy wallet / conservative policy
+- live Graph multi-protocol fetch
+- confidential score
+- Arc fee payment
+- action permitted
+- receipt available
+
+Scenario 2: DENY
+- NL prompt for risky wallet / stricter policy
+- live Graph multi-protocol fetch
+- confidential score
+- action blocked
+- clear refusal reason without leaking secrets
+
+If either scenario fails, mark demo readiness as failed.
+
+H. PRIVACY LEAK HUNT
+Inspect:
+- API responses
+- logs
+- frontend payloads
+- DB records
+- error messages
+- demo output
+- exception traces
+
+Fail the privacy audit if any of these appear where they should not:
+- model weights
+- threshold matrices
+- raw intermediate feature math intended to stay sealed
+- secrets
+- Vault values
+
+I. NEGATIVE / ADVERSARIAL TESTS
+Attempt:
+- empty prompt
+- malformed wallet
+- unsupported protocol
+- missing Graph API key
+- CRE unavailable
+- Arc underfunded wallet
+- score threshold boundary values exactly at cutoff
+- duplicate requests
+- out-of-order agent calls
+- partial network failures
+
+Expected behavior: fail closed, with clear errors, no false approvals.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+1. Start by inventorying existing tests and running them.
+2. Then fill gaps with the highest-risk missing tests first:
+   - confidential bypass
+   - Graph live multi-protocol path
+   - Arc allow/deny
+   - privacy leaks
+3. Do not claim live if it is mocked.
+4. Do not hide flaky tests. Quarantine and report them.
+5. Prefer minimal patches that harden truthfulness over broad refactors.
+6. If code must be fixed to make tests meaningful, fix only what is necessary and document it.
+7. Capture evidence for:
+   - test results
+   - CRE deployment/execution
+   - Graph live queries
+   - Arc tx hashes for fee / allow / deny where possible
+
+==================================================
+OUTPUT FORMAT
+==================================================
+
+Return a structured report with these sections:
+
+1. Executive summary
+   - overall readiness: PASS / PASS WITH GAPS / FAIL
+   - top 5 risks
+
+2. Claims vs reality matrix
+   - claim
+   - status
+   - evidence
+   - notes
+
+3. Test results
+   - existing tests
+   - new tests added
+   - pass/fail counts
+
+4. Critical failures
+   - each issue
+   - severity
+   - reproduction
+   - impact on bounty demo
+
+5. Privacy boundary findings
+
+6. Live evidence collected
+   - CRE
+   - Graph
+   - Arc
+
+7. Fixes applied
+   - what changed
+   - why
+
+8. Remaining blockers
+
+9. Demo readiness checklist
+   - NL/MCP entry
+   - two-protocol live Graph path
+   - confidential score path
+   - operator vs enclave clarity
+   - Arc fee
+   - allow path
+   - deny path
+   - no secret leakage
+
+10. Final recommendation
+   - ship / fix then ship / not ready
+
+==================================================
+DEFINITION OF DONE
+==================================================
+
+Testing is complete only when:
+
+- top-to-bottom paths above have been exercised
+- allow and deny both verified
+- confidential path is proven required
+- Graph live multi-protocol path is proven
+- privacy leak hunt is done
+- a clear readiness verdict is issued with evidence
+
+Begin now by auditing the repo structure, running the current suite, and identifying the highest-risk gaps before writing or extending tests.

@@ -50,10 +50,10 @@ describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
       const result = await executeScoreGatedAction(candidate, passingScore, { dryRun: true })
 
       expect(result.passed).toBe(true)
-      expect(result.status).toBe('EXECUTED_ON_ARC')
+      expect(result.status).toBe('SIMULATED_DRY_RUN')
       expect(result.score).toBe(85)
       expect(result.threshold).toBe(70)
-      expect(result.transactionHash).toBeDefined()
+      expect(result.transactionHash).toBeUndefined()
       expect(result.blockedReason).toBeUndefined()
     })
 
@@ -107,7 +107,7 @@ describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
       expect(result.score).toBeGreaterThanOrEqual(0)
       expect(result.score).toBeLessThanOrEqual(100)
       expect(result.attestationSummary.valid).toBe(true)
-      expect(result.attestationSummary.workflowId).toBe('privatesignal-confidential-v1')
+      expect(result.attestationSummary.workflowId).toBe('privatesignal-local-harness')
       expect(result.feePayment).toBeDefined()
       expect(result.gatedAction).toBeDefined()
       expect(result.steps.length).toBeGreaterThanOrEqual(5)

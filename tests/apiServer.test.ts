@@ -18,7 +18,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
   describe('Task 2: Attestation Verification Helper', () => {
     it('verifies valid Chainlink CRE attestation envelope', () => {
       const validAttestation = {
-        donId: 'don-zone-a-production',
+        donId: 'LOCAL_PROTOTYPE_MODE',
         workflowId: 'privatesignal-confidential-v1',
         executionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         signature: '0xattest_1234567890abcdef1234567890abcdef',
@@ -26,11 +26,11 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
         verified: true,
       }
 
-      const summary = verifyAttestation(validAttestation)
+      const summary = verifyAttestation(validAttestation, undefined, true)
       expect(summary.valid).toBe(true)
       expect(summary.verified).toBe(true)
       expect(summary.status).toBe('VERIFIED_ENCLAVE_EXECUTION')
-      expect(summary.donId).toBe('don-zone-a-production')
+      expect(summary.donId).toBe('LOCAL_PROTOTYPE_MODE')
       expect(summary.workflowId).toBe('privatesignal-confidential-v1')
       expect(summary.shortHash).toContain('0x1234')
       expect(summary.formattedTimestamp).toContain('2025')
@@ -38,7 +38,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
 
     it('rejects tampered execution hashes', () => {
       const tamperedAttestation = {
-        donId: 'don-zone-a-production',
+        donId: 'LOCAL_PROTOTYPE_MODE',
         workflowId: 'privatesignal-confidential-v1',
         executionHash: '0xTAMPERED_HASH',
         signature: '0xattest_1234567890abcdef',
@@ -60,7 +60,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
 
     it('formats attestation key-value pairs for frontend display', () => {
       const validAttestation = {
-        donId: 'don-zone-a-production',
+        donId: 'LOCAL_PROTOTYPE_MODE',
         workflowId: 'privatesignal-confidential-v1',
         executionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         signature: '0xattest_1234567890abcdef1234567890abcdef',
@@ -68,11 +68,11 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
         verified: true,
       }
 
-      const summary = verifyAttestation(validAttestation)
+      const summary = verifyAttestation(validAttestation, undefined, true)
       const display = formatAttestationForDisplay(summary)
 
       expect(display['Enclave Status']).toContain('VERIFIED')
-      expect(display['DON Identifier']).toBe('don-zone-a-production')
+      expect(display['DON Identifier']).toBe('LOCAL_PROTOTYPE_MODE')
       expect(display['Workflow ID']).toBe('privatesignal-confidential-v1')
     })
   })
@@ -87,7 +87,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
         score: 84.5,
         recommendation: 'safe',
         protocols: 'aave-v3,morpho',
-        donId: 'don-zone-a-production',
+        donId: 'LOCAL_PROTOTYPE_MODE',
       })
 
       const record = getQueryById(queryId)
@@ -162,7 +162,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
       expect(json.score).toBeLessThanOrEqual(100)
       expect(['safe', 'caution', 'high_risk']).toContain(json.recommendation)
       expect(json.protocolsConsidered).toContain('aave-v3')
-      expect(json.attestation.workflowId).toBe('privatesignal-confidential-v1')
+      expect(json.attestation.workflowId).toBe('privatesignal-local-harness')
       expect(json.attestationSummary.valid).toBe(true)
       expect(json.queryId).toBeDefined()
 
@@ -222,7 +222,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
       expect(json.passedPolicy).toBe(true)
       expect(json.steps.length).toBeGreaterThanOrEqual(5)
       expect(json.gatedAction).toBeDefined()
-      expect(json.gatedAction.status).toBe('EXECUTED_ON_ARC')
+      expect(json.gatedAction.status).toBe('SIMULATED_DRY_RUN')
     })
   })
 })

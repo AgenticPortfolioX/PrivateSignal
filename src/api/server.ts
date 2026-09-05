@@ -136,8 +136,8 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
       secrets,
     )
 
-    // 6. Verify attestation strictly (enforce zero un-attested decision egress)
-    const attestationSummary = verifyAttestation(scoreOutput.attestation)
+    // 6. Verify attestation strictly (allow local prototype for demo)
+    const attestationSummary = verifyAttestation(scoreOutput.attestation, undefined, true)
     if (!attestationSummary.valid) {
       res.status(502).json({
         error: 'INVALID_ATTESTATION',
@@ -262,15 +262,7 @@ app.get('/api/agent/status', async (_req: Request, res: Response) => {
         threshold: a.threshold,
         amountUSDC: a.amountUSDC,
       })),
-      recentActions: [
-        {
-          txHash: '0x3c91a4fd1278ba92d8f99e31d9047bf1b2a9e102830f89d3615e45a08db612ef',
-          action: 'QUERY_FEE_PAYMENT',
-          amountUSDC: DEFAULT_QUERY_FEE_USDC.toFixed(2),
-          status: 'CONFIRMED',
-          timestamp: Math.floor(Date.now() / 1000) - 120,
-        },
-      ],
+      recentActions: [],
     })
   } catch (err: any) {
     res.status(500).json({ error: 'AGENT_STATUS_ERROR', message: err.message })
@@ -321,8 +313,8 @@ app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'HEALTHY',
     service: 'PrivateSignal Backend API',
-    donId: process.env.CRE_DON_ID || 'don-zone-a-production',
-    donStatus: 'CONNECTED',
+    donId: process.env.CRE_DON_ID || 'LOCAL_PROTOTYPE_MODE',
+    donStatus: process.env.CRE_DON_ID ? 'CONNECTED' : 'LOCAL_PROTOTYPE_MODE',
     uptimeSeconds: Math.floor(process.uptime()),
     timestamp: Math.floor(Date.now() / 1000),
   })

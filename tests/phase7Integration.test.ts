@@ -59,13 +59,13 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
 
       expect(verdict.score).toBeGreaterThanOrEqual(65)
       expect(verdict.recommendation).toBe('safe')
-      expect(verdict.attestation.verified).toBe(true)
-      expect(verdict.attestation.donId).toBe('don-zone-a-production')
+      expect(verdict.attestation.verified).toBe(false)
+      expect(verdict.attestation.donId).toBe('LOCAL_PROTOTYPE_MODE')
 
       // 4. Attestation Verification helper
-      const verification = verifyAttestation(verdict.attestation)
+      const verification = verifyAttestation(verdict.attestation, undefined, true)
       expect(verification.valid).toBe(true)
-      expect(verification.verified).toBe(true)
+      expect(verification.verified).toBe(false)
       expect(verification.executionHash).toMatch(/^0x[a-f0-9]+$/)
 
       // 5. Arc Agent Execution Loop
@@ -81,7 +81,7 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
       const agentResult = await runAgentLoop(agentConfig)
       expect(agentResult.success).toBe(true)
       expect(agentResult.steps.length).toBe(5)
-      expect(agentResult.attestationSummary.verified).toBe(true)
+      expect(agentResult.attestationSummary.verified).toBe(false)
     })
   })
 
@@ -104,8 +104,8 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
       expect(res.success).toBe(true)
       expect(res.score).toBeGreaterThanOrEqual(65)
       expect(res.recommendation).toBe('safe')
-      expect(res.gatedAction?.status).toBe('EXECUTED_ON_ARC')
-      expect(res.gatedAction?.transactionHash).toBeDefined()
+      expect(res.gatedAction?.status).toBe('SIMULATED_DRY_RUN')
+      expect(res.gatedAction?.transactionHash).toBeUndefined()
     })
 
     it('Scenario A [Run 2]: Conservative policy evaluates healthy wallet identically with approved action', async () => {
@@ -122,8 +122,8 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
       expect(res.success).toBe(true)
       expect(res.score).toBeGreaterThanOrEqual(65)
       expect(res.recommendation).toBe('safe')
-      expect(res.gatedAction?.status).toBe('EXECUTED_ON_ARC')
-      expect(res.gatedAction?.transactionHash).toBeDefined()
+      expect(res.gatedAction?.status).toBe('SIMULATED_DRY_RUN')
+      expect(res.gatedAction?.transactionHash).toBeUndefined()
     })
 
     // Scenario B: Aggressive policy, high-risk wallet -> Low score -> Action Blocked
@@ -153,7 +153,7 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
 
       expect(verdict.score).toBeLessThan(80)
       expect(['caution', 'high_risk']).toContain(verdict.recommendation)
-      expect(verdict.attestation.verified).toBe(true)
+      expect(verdict.attestation.verified).toBe(false)
     })
 
     it('Scenario B [Run 2]: Aggressive policy evaluates high-risk wallet identically with blocked action', async () => {
@@ -172,7 +172,7 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
 
       expect(verdict.score).toBeLessThan(80)
       expect(['caution', 'high_risk']).toContain(verdict.recommendation)
-      expect(verdict.attestation.verified).toBe(true)
+      expect(verdict.attestation.verified).toBe(false)
     })
   })
 
@@ -257,8 +257,8 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
 
       // 2. Verify attestation integrity
       expect(verdict.attestation).toBeDefined()
-      expect(verdict.attestation.verified).toBe(true)
-      expect(verdict.attestation.donId).toBe('don-zone-a-production')
+      expect(verdict.attestation.verified).toBe(false)
+      expect(verdict.attestation.donId).toBe('LOCAL_PROTOTYPE_MODE')
       expect(verdict.attestation.signature).toBeDefined()
 
       // 3. Verify clean reason codes

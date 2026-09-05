@@ -176,8 +176,8 @@ describe('PrivateSignal: End-to-End Testing & Validation Suite', () => {
 
       const result = await executeScoreGatedAction(action, 85, { dryRun: true })
       expect(result.passed).toBe(true)
-      expect(result.status).toBe('EXECUTED_ON_ARC')
-      expect(result.transactionHash).toBeDefined()
+      expect(result.status).toBe('SIMULATED_DRY_RUN')
+      expect(result.transactionHash).toBeUndefined()
       expect(result.blockedReason).toBeUndefined()
     })
 
@@ -216,16 +216,16 @@ describe('PrivateSignal: End-to-End Testing & Validation Suite', () => {
       expect(result.score).toBeGreaterThanOrEqual(65)
       expect(result.feePayment).toBeDefined()
       expect(result.feePayment?.amountUSDC).toBe(0.10)
-      expect(result.gatedAction?.status).toBe('EXECUTED_ON_ARC')
+      expect(result.gatedAction?.status).toBe('SIMULATED_DRY_RUN')
 
       // Verify attestation specification format
       const attestation = result.attestationSummary
       expect(attestation.valid).toBe(true)
-      expect(attestation.verified).toBe(true)
-      expect(attestation.donId).toBe('don-zone-a-production')
-      expect(attestation.workflowId).toBe('privatesignal-confidential-v1')
+      expect(attestation.verified).toBe(false)
+      expect(attestation.donId).toBe('LOCAL_PROTOTYPE_MODE')
+      expect(attestation.workflowId).toBe('privatesignal-local-harness')
       expect(attestation.shortHash).toContain('0x')
-      expect(attestation.status).toBe('VERIFIED_ENCLAVE_EXECUTION')
+      expect(attestation.status).toBe('MISSING_ATTESTATION')
     })
 
     it('blocks capital deployment end-to-end when evaluated with high-risk threshold', async () => {

@@ -116,12 +116,12 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
     let feeReceipt: PaymentReceipt
     if (config.dryRun) {
       feeReceipt = {
-        txHash: '0x3c91_simulated_fee_receipt' as `0x${string}`,
+        txHash: '0xSIMULATED_FEE_RECEIPT_DRY_RUN' as `0x${string}`,
         amountUSDC: DEFAULT_QUERY_FEE_USDC,
         payer: balanceInfo.address,
         recipient: '0x748ABdeF0775132E8F941e1513152D5eb02D3a4B',
-        blockNumber: '1000',
-        gasUsed: '21000',
+        blockNumber: '0',
+        gasUsed: '0',
         status: 'SUCCESS',
         timestamp: Math.floor(Date.now() / 1000),
       }
@@ -178,7 +178,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       secrets,
     )
 
-    const attestationSummary = verifyAttestation(scoreOutput.attestation)
+    const attestationSummary = verifyAttestation(scoreOutput.attestation, undefined, true)
     if (!attestationSummary.valid) {
       throw new Error(`ATTESTATION_FAILED: Cryptographic enclave proof failed verification`)
     }

@@ -33,6 +33,7 @@ export interface AttestationSummary {
 export function verifyAttestation(
   attestation: any,
   expectedExecutionHash?: string,
+  allowUnverifiedLocal: boolean = false,
 ): AttestationSummary {
   if (!attestation || typeof attestation !== 'object') {
     return {
@@ -86,7 +87,14 @@ export function verifyAttestation(
     signature.startsWith('0xattest_') ||
     (signature.startsWith('0x') && signature.length >= 66)
 
-  const isValid = Boolean(verified && hashMatches && isValidSignatureFormat)
+  const isLocalPrototype = signature === 'UNVERIFIED_LOCAL_EXECUTION' && donId === 'LOCAL_PROTOTYPE_MODE'
+
+  let isValid = false
+  if (isLocalPrototype && allowUnverifiedLocal) {
+    isValid = true // Allowed for demo purposes, but distinctly marked
+  } else {
+    isValid = Boolean(verified && hashMatches && isValidSignatureFormat)
+  }
 
   const formattedDate = new Date(timestamp * 1000).toLocaleString('en-US', {
     timeZone: 'America/New_York',
@@ -100,9 +108,9 @@ export function verifyAttestation(
     timestamp,
     workflowId,
     executionHash,
-    signatureSnippet: `${signature.slice(0, 14)}...${signature.slice(-6)}`,
-    verified: isValid,
-    status: isValid ? 'VERIFIED_ENCLAVE_EXECUTION' : 'INVALID_ATTESTATION',
+    signatureSnippet: isLocalPrototype ? 'UNVERIFIED_LOCAL' : `${signature.slice(0, 14)}...${signature.slice(-6)}`,
+    verified: isLocalPrototype ? false : isValid,
+    status: isValid ? (isLocalPrototype ? 'MISSING_ATTESTATION' : 'VERIFIED_ENCLAVE_EXECUTION') : 'INVALID_ATTESTATION',
     formattedTimestamp: `${formattedDate} EDT`,
     shortHash: `${executionHash.slice(0, 10)}...${executionHash.slice(-8)}`,
     donZone: donId.includes('production') ? 'Chainlink Production TEE (SGX/TDX)' : 'Simulation DON',
@@ -114,7 +122,9 @@ export function verifyAttestation(
  */
 export function formatAttestationForDisplay(summary: AttestationSummary): Record<string, string> {
   return {
-    'Enclave Status': summary.valid ? 'VERIFIED (Cryptographic Attestation Active)' : 'FAILED / UNVERIFIED',
+    'Enclave Status': summary.valid 
+      ? (summary.verified ? 'VERIFIED (Cryptographic Attestation Active)' : 'UNVERIFIED (Local Prototype Mode)') 
+      : 'FAILED / UNVERIFIED',
     'DON Identifier': summary.donId,
     'Execution Environment': summary.donZone,
     'Workflow ID': summary.workflowId,

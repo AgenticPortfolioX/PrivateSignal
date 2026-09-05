@@ -225,6 +225,10 @@ export async function aggregateLiveGraphData(
 
   const features = extractCrossProtocolFeatures(unifiedAccountData, positions)
 
+  if (unifiedAccountData.totalCollateralUSD === 0 && unifiedAccountData.totalDebtUSD === 0) {
+    throw new Error('GRAPH_DATA_UNAVAILABLE: No active positions found across any evaluated protocols. Failing closed to prevent default-safe scoring.')
+  }
+
   const normalizedGraphData: NormalizedGraphData = {
     positions,
     healthFactor: unifiedAccountData.healthFactor,

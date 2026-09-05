@@ -84,7 +84,7 @@ describe('PrivateSignal CRE Workflow', () => {
     const parsed = JSON.parse(response)
     expect(parsed.score).toBeGreaterThanOrEqual(65)
     expect(parsed.recommendation).toBe('safe')
-    expect(parsed.attestation.verified).toBe(true)
+    expect(parsed.attestation.verified).toBe(false)
   })
 
   it('encodes receiver contract calldata correctly with viem', () => {
@@ -122,7 +122,7 @@ describe('PrivateSignal CRE Workflow', () => {
 
     expect(verdict.score).toBeGreaterThanOrEqual(65)
     expect(verdict.recommendation).toBe('safe')
-    expect(verdict.attestation.verified).toBe(true)
-    expect(verdict.attestation.donId).toBe('don-zone-a-production')
+    expect(verdict.attestation.verified).toBe(false)
+    expect(verdict.attestation.donId).toBe('LOCAL_PROTOTYPE_MODE')
   })
 })
