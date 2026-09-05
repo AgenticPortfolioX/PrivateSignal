@@ -2,7 +2,7 @@
 
 > **We run a private cross-protocol risk model inside a Chainlink TEE on live standardized Graph data, and only a signed score leaves the enclave so agents on Arc can pay for and act on confidential risk intelligence without leaking strategy.**
 
-[![Tests](https://img.shields.io/badge/tests-39%20passing-10b981.svg)](#test-suites--verification)
+[![Tests](https://img.shields.io/badge/tests-39%20passing-10b981.svg)](#13-test-suites--verification)
 [![Chainlink CRE](https://img.shields.io/badge/Chainlink-CRE%20Confidential-375bd2.svg)](https://chain.link)
 [![The Graph](https://img.shields.io/badge/The%20Graph-MCP%20%26%20Subgraphs-6b21a8.svg)](https://thegraph.com)
 [![Arc Testnet](https://img.shields.io/badge/Arc%20Network-Native%20USDC-059669.svg)](https://arc.network)
@@ -31,7 +31,20 @@ Modern DeFi institutions and autonomous agents face an impossible dilemma when m
 
 ---
 
-## 3. Architecture Diagram
+## 3. Project Description
+
+**PrivateSignal** is an institutional-grade confidential risk intelligence infrastructure engineered for autonomous on-chain finance. As decentralized capital markets scale across multiple lending protocols, institutional credit delegates, hedge funds, DAOs, and autonomous AI agents require continuous, verifiable risk assessment to safeguard collateral and execute policy-driven capital allocation. However, public oracles force risk managers to either expose their proprietary mathematical models on-chain or resort to unaudited, centralized off-chain servers.
+
+PrivateSignal harmonizes three foundational Web3 technologies into a single unified workflow:
+- **The Graph Protocol**: Provides standardized, decentralized indexing across major lending protocols (Aave V3 and Morpho Blue) using canonical schemas and natural language Model Context Protocol (MCP) routing.
+- **Chainlink Runtime Environment (CRE) & Hardware Enclaves (TEE)**: Executes the confidential risk scoring core inside a tamper-proof hardware enclave compiled to deterministic QuickJS WebAssembly. Proprietary model weights and policy cutoffs are loaded directly from the Chainlink Vault DON—enabling high-conviction risk analysis without exposing internal intellectual property or trading alpha.
+- **Arc Network (Circle L1)**: Operates an autonomous agent loop with a native USDC gas model where agents sponsor confidential score queries and execute hard score-gated risk mitigation actions (capital deployment, leverage trimming) with zero ERC-20 token overhead and zero ETH gas dependencies.
+
+By sealing proprietary models within the enclave and egressing only cryptographically signed verdicts, PrivateSignal delivers institutional trust, zero alpha leakage, and verifiable policy enforcement for the next generation of autonomous on-chain agents.
+
+---
+
+## 4. Architecture Diagram
 
 [![PrivateSignal CRE Confidential Architecture](docs/architecture.svg)](docs/architecture.svg)
 
@@ -94,7 +107,7 @@ privatesignal/
 
 ---
 
-## 4. Privacy Boundary: What Stays Sealed vs Leaves the Enclave
+## 5. Privacy Boundary: What Stays Sealed vs Leaves the Enclave
 
 | Security Zone | Data Element | Description |
 | :--- | :--- | :--- |
@@ -111,14 +124,9 @@ privatesignal/
 
 ---
 
-## 5. Sponsor Integration Details
+## 6. Sponsor Integration Details
 
 ### Chainlink: CRE Confidential Workflow & Vault DON Secrets
-
-[![Chainlink CRE Confidential Architecture Diagram](docs/architecture.svg)](docs/architecture.svg)
-
-> **[View Architecture Diagram (docs/architecture.svg)](docs/architecture.svg)** — Interactive schematic illustrating the Chainlink TEE enclave boundary, Vault DON secret injection, The Graph ingestion, and Arc agent loop.
-
 - **Confidential Scorer Handler** (`src/handlers/confidentialScorer.ts`): Compiles to WebAssembly via QuickJS under strict zero-leak constraints. Operates with zero Node.js built-ins (`fs`, `crypto`, `http`) and zero browser globals (`fetch`).
 - **Chainlink Vault DON Secrets**: Injected inside the enclave boundary using `cre.capabilities.Secrets`. Proprietary scoring parameters never touch the host machine or host logs.
 - **Cryptographic Attestation Verification** (`src/utils/verifyAttestation.ts`): BFT consensus proof verifying that computation ran unaltered in an authentic enclave.
@@ -137,7 +145,7 @@ privatesignal/
 
 ---
 
-## 6. Getting Started
+## 7. Getting Started
 
 ### Prerequisites
 - [Bun](https://bun.sh) (v1.1+ recommended) or Node.js (v20+)
@@ -203,7 +211,7 @@ bun run deploy:workflow
 
 ---
 
-## 7. Demo Guide
+## 8. Demo Guide
 
 ### Running the Interactive Narration Script
 ```bash
@@ -238,7 +246,7 @@ bun run demo --auto
 
 ---
 
-## 8. What's Live vs Mocked
+## 9. What's Live vs Mocked
 
 | Component | Status | Implementation Details |
 | :--- | :--- | :--- |
@@ -251,7 +259,7 @@ bun run demo --auto
 
 ---
 
-## 9. Judge Verification Guide
+## 10. Judge Verification Guide
 
 ### For Chainlink Judges
 - **Confidential TEE Scorer**: [`src/handlers/confidentialScorer.ts`](src/handlers/confidentialScorer.ts)
@@ -280,7 +288,7 @@ bun run demo --auto
 
 ---
 
-## 10. Why This Isn't a Template Liquidation Bot
+## 11. Why This Isn't a Template Liquidation Bot
 
 PrivateSignal is **not** an MEV bot, arbitrage bot, or automated liquidation script:
 
@@ -290,7 +298,7 @@ PrivateSignal is **not** an MEV bot, arbitrage bot, or automated liquidation scr
 
 ---
 
-## 11. Security & Privacy Considerations
+## 12. Security & Privacy Considerations
 
 - **No Secrets in Logs**: Sanitized audit logger (`src/api/server.ts`) redacts all private weights, thresholds, and intermediate math.
 - **Zero-Storage Privacy Contract**: SQLite database (`src/api/db.ts`) stores only public query metadata (timestamps, wallet addresses, final score, attestation hash).
@@ -299,7 +307,7 @@ PrivateSignal is **not** an MEV bot, arbitrage bot, or automated liquidation scr
 
 ---
 
-## 12. Test Suites & Verification
+## 13. Test Suites & Verification
 
 PrivateSignal maintains **100% test pass rate** across 39 tests:
 
