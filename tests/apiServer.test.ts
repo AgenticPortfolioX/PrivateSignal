@@ -203,5 +203,26 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
       const json = (await res.json()) as any
       expect(json.error).toBe('INVALID_REQUEST')
     })
+
+    it('POST /api/agent/run triggers autonomous agent loop and returns telemetry', async () => {
+      const res = await fetch(`${baseUrl}/api/agent/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress: sampleWallet,
+          policyThreshold: 65,
+          candidateAction: 'allocate',
+          dryRun: true,
+        }),
+      })
+
+      expect(res.status).toBe(200)
+      const json = (await res.json()) as any
+      expect(json.success).toBe(true)
+      expect(json.passedPolicy).toBe(true)
+      expect(json.steps.length).toBeGreaterThanOrEqual(5)
+      expect(json.gatedAction).toBeDefined()
+      expect(json.gatedAction.status).toBe('EXECUTED_ON_ARC')
+    })
   })
 })

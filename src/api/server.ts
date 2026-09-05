@@ -26,10 +26,16 @@ import { scoreCrossProtocolRisk } from '../handlers/confidentialScorer'
 import { getDefaultSecretsForStyle } from '../config/policyConfig'
 import { verifyAttestation } from '../utils/verifyAttestation'
 import { saveQueryMetadata, getRecentQueries, getQueryById } from './db'
+import { getArcBalance, getAgentAccount, DEFAULT_QUERY_FEE_USDC } from '../arc/agentWallet'
+import { runAgentLoop, type AgentConfig } from '../arc/agentLoop'
+import { STANDARD_CANDIDATE_ACTIONS } from '../arc/gatedAction'
 
 export const app: Express = express()
 app.use(cors())
 app.use(express.json())
+app.set('json replacer', (_key: string, value: any) =>
+  typeof value === 'bigint' ? value.toString() : value
+)
 
 // Rate limiter: 10 requests per minute per IP
 interface RateLimitWindow {
@@ -208,26 +214,99 @@ app.get('/api/history/:queryId', (req: Request, res: Response) => {
 })
 
 // GET /api/agent/status
-app.get('/api/agent/status', (_req: Request, res: Response) => {
-  const agentAddress = process.env.ARC_AGENT_WALLET_ADDRESS || '0xfb79f82a690b91ab86c2299de4e7ecc228f61269'
-  const feeAmount = process.env.ARC_FEE_AMOUNT_USDC || '0.10'
+app.get('/api/agent/status', async (_req: Request, res: Response) => {
+  try {
+    let agentAddress = process.env.ARC_AGENT_WALLET_ADDRESS || '0xfb79f82a690b91ab86c2299de4e7ecc228f61269'
+    try {
+      const account = getAgentAccount()
+      if (!process.env.ARC_AGENT_WALLET_ADDRESS) {
+        agentAddress = account.address
+      }
+    } catch {
+      // Fallback to configured address
+    }
+    let balanceFormatted = '20.00'
+    let balanceRaw = '20000000000000000000'
+    let isLive = false
 
-  res.status(200).json({
-    network: 'Arc Testnet (Circle L1)',
-    agentWalletAddress: agentAddress,
-    balanceUSDC: '20.00',
-    feePerQueryUSDC: feeAmount,
-    gasModel: 'Native USDC for gas (zero ETH needed)',
-    recentActions: [
-      {
-        txHash: '0x3c91a4fd1278ba92d8f99e31d9047bf1b2a9e102830f89d3615e45a08db612ef',
-        action: 'QUERY_FEE_PAYMENT',
-        amountUSDC: feeAmount,
-        status: 'CONFIRMED',
-        timestamp: Math.floor(Date.now() / 1000) - 120,
-      },
-    ],
-  })
+    try {
+      const balanceInfo = await getArcBalance(agentAddress)
+      balanceFormatted = balanceInfo.balanceFormatted
+      balanceRaw = balanceInfo.balanceWei.toString()
+      isLive = true
+    } catch {
+      // Graceful fallback if offline
+    }
+
+    res.status(200).json({
+      network: 'Arc Testnet (Circle L1)',
+      chainId: 5042002,
+      agentWalletAddress: agentAddress,
+      balanceUSDC: balanceFormatted,
+      balanceRaw,
+      feePerQueryUSDC: (DEFAULT_QUERY_FEE_USDC).toFixed(2),
+      gasModel: 'Native USDC for gas (zero ETH needed)',
+      paymasterSupport: 'Arc native gas model natively uses USDC without separate paymaster contract',
+      liveRpcConnected: isLive,
+      availableActions: Object.values(STANDARD_CANDIDATE_ACTIONS).map((a) => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        threshold: a.threshold,
+        amountUSDC: a.amountUSDC,
+      })),
+      recentActions: [
+        {
+          txHash: '0x3c91a4fd1278ba92d8f99e31d9047bf1b2a9e102830f89d3615e45a08db612ef',
+          action: 'QUERY_FEE_PAYMENT',
+          amountUSDC: DEFAULT_QUERY_FEE_USDC.toFixed(2),
+          status: 'CONFIRMED',
+          timestamp: Math.floor(Date.now() / 1000) - 120,
+        },
+      ],
+    })
+  } catch (err: any) {
+    res.status(500).json({ error: 'AGENT_STATUS_ERROR', message: err.message })
+  }
+})
+
+// POST /api/agent/run
+app.post('/api/agent/run', async (req: Request, res: Response) => {
+  try {
+    const body = req.body || {}
+    const walletAddress = typeof body.walletAddress === 'string' && body.walletAddress.trim().length > 0
+      ? body.walletAddress.trim()
+      : '0x1111111111111111111111111111111111111111'
+
+    const policyThreshold = typeof body.policyThreshold === 'number'
+      ? body.policyThreshold
+      : 70
+
+    const candidateAction = ['allocate', 'transfer', 'none'].includes(body.candidateAction)
+      ? body.candidateAction
+      : 'allocate'
+
+    const config: AgentConfig = {
+      walletAddress,
+      policyThreshold,
+      candidateAction,
+      queryString: body.queryString,
+      protocols: Array.isArray(body.protocols) ? body.protocols : undefined,
+      policyProfileId: body.policyProfileId,
+      actionAmountUSDC: typeof body.actionAmountUSDC === 'number' ? body.actionAmountUSDC : undefined,
+      actionDestination: body.actionDestination,
+      dryRun: Boolean(body.dryRun),
+    }
+
+    const result = await runAgentLoop(config)
+    res.status(200).json(result)
+  } catch (err: any) {
+    console.error('[AGENT_RUN_ERROR]', err)
+    res.status(500).json({
+      error: 'AGENT_RUN_ERROR',
+      message: err.message || 'An error occurred during agent loop execution',
+    })
+  }
 })
 
 // GET /api/health

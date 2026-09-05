@@ -17,8 +17,12 @@ privatesignal/
 ├── tsconfig.json                 # Bundler target TypeScript configuration (ES2022, strict)
 ├── src/                          # Confidential Core & Graph Integration
 │   ├── api/                      # Product API & Query Audit Storage
-│   │   ├── server.ts             # Express API server (/api/score, /api/history, /api/agent/status)
+│   │   ├── server.ts             # Express API server (/api/score, /api/history, /api/agent/status, /api/agent/run)
 │   │   └── db.ts                 # SQLite metadata persistence (zero secrets stored)
+│   ├── arc/                      # Arc Testnet (Circle L1) Autonomous Agent Loop
+│   │   ├── agentWallet.ts        # Native USDC payment service & gas balance monitor
+│   │   ├── gatedAction.ts        # Hard score-gated risk mitigation action executor
+│   │   └── agentLoop.ts          # Closed-loop autonomous agent controller & telemetry
 │   ├── graph/                    # Multi-protocol Graph robustness & MCP integration
 │   │   ├── queries.ts            # Introspected multi-protocol queries & live endpoints
 │   │   ├── schemaMapper.ts       # Protocol schema normalizer (Messari Lending -> Canonical)
@@ -46,6 +50,7 @@ privatesignal/
 │   ├── confidentialScorer.test.ts# Confidential core unit tests & privacy boundary verification
 │   ├── graphRobustness.test.ts   # Graph queries, schema mapper, router, & aggregator tests
 │   ├── apiServer.test.ts         # Express API endpoints & attestation verification test suite
+│   ├── arcAgentLoop.test.ts      # Arc testnet balance, gated action allow/deny, & loop telemetry
 │   └── privatesignal.test.ts     # CRE workflow configuration & payload test suite
 └── privatesignal/                # CRE Workflow Module
     ├── main.ts                   # Workflow entrypoint with CRE Runner
@@ -86,7 +91,13 @@ privatesignal/
    - **`/agent`**: Circle agent wallet on Arc testnet (Circle L1) showing native USDC balance and score-gated triggers.
    - **`/privacy`**: Interactive architectural map and data classification matrix comparing TEE enclave isolation against operator view.
 
-6. **BFT Consensus & DON Workflow Deployment**:
+6. **Autonomous Arc Agent Loop & Native USDC Gas Integration (`src/arc/`)**:
+   - **Circle L1 Native USDC Model**: Arc testnet uses USDC as the *native gas currency* (18 decimals). Transactions are standard native EVM transfers (`value: parseEther(...)`), eliminating ERC-20 `approve()` and contract execution overhead.
+   - **Payment Service (`agentWallet.ts`)**: Autonomous balance monitoring and 0.10 USDC native fee payments to oracle gateways with low-balance warnings (< 1.0 USDC).
+   - **Score-Gated Action Execution (`gatedAction.ts`)**: Enforces hard policy barriers—capital allocations and yield injections strictly abort on-chain if the attested confidential risk score falls below the required threshold (e.g. >= 65 for safe allocation, >= 80 for yield strategy).
+   - **Closed-Loop Agent Controller (`agentLoop.ts`)**: Orchestrates the full 5-stage autonomous lifecycle: Balance Check -> Fee Payment -> Graph Aggregation -> TEE Scoring -> Policy Gating & Arc Execution, outputting structured telemetry.
+
+7. **BFT Consensus & DON Workflow Deployment**:
    - Compiles deterministic WASM and registers workflow directly on Chainlink CRE production DON.
 
 ---
