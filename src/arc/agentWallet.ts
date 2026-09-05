@@ -46,6 +46,14 @@ export const DEFAULT_ORACLE_FEE_RECIPIENT =
 
 export const DEFAULT_QUERY_FEE_USDC = parseFloat(process.env.ARC_FEE_AMOUNT_USDC || '0.10')
 
+export function parseUsdcAmount(amount: number | string): bigint {
+  return parseEther(amount.toString())
+}
+
+export function formatUsdcAmount(amountWei: bigint): string {
+  return formatEther(amountWei)
+}
+
 export interface PaymentReceipt {
   txHash: Hash
   amountUSDC: number
@@ -63,6 +71,8 @@ export interface ArcBalanceInfo {
   balanceUSDC: number
   balanceFormatted: string
   isLowBalance: boolean
+  currency: 'USDC'
+  decimals: 18
 }
 
 /**
@@ -128,6 +138,8 @@ export async function getArcBalance(targetAddress?: string): Promise<ArcBalanceI
     balanceUSDC: Number(balanceUSDC.toFixed(4)),
     balanceFormatted: balanceUSDC.toFixed(2),
     isLowBalance: balanceUSDC < 1.0, // Alert if balance is below 1.0 USDC
+    currency: 'USDC',
+    decimals: 18,
   }
 }
 

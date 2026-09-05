@@ -3,7 +3,7 @@
 > **Private risk intelligence for on-chain agents.**  
 > Live multi-protocol data from The Graph enters a Chainlink TEE. A proprietary model scores it in confidential compute. Only a signed verdict leaves the enclave. Agents on Arc pay in native USDC and may act only if that attested score clears policy.
 
-[![Tests](https://img.shields.io/badge/tests-50%20passing-10b981.svg)](#tests)
+[![Tests](https://img.shields.io/badge/tests-58%20passing-10b981.svg)](#tests)
 [![Chainlink CRE](https://img.shields.io/badge/Chainlink-CRE%20Confidential-375bd2.svg)](https://chain.link)
 [![The Graph](https://img.shields.io/badge/The%20Graph-MCP%20%26%20Subgraphs-6b21a8.svg)](https://thegraph.com)
 [![Arc Testnet](https://img.shields.io/badge/Arc%20Network-Native%20USDC-059669.svg)](https://arc.network)
@@ -429,6 +429,15 @@ PrivateSignal is **not**:
 
 ---
 
+## Deployment Evidence & Judge Verification Dossier
+
+For complete transaction receipts, contract addresses, RPC endpoints, and consecutive validation logs, review the official dossier:
+- **Deployment Evidence**: [`docs/deployment-evidence.md`](docs/deployment-evidence.md)
+- **Demo Narration Script**: [`docs/demo-script.md`](docs/demo-script.md)
+- **Architecture Visual**: [`docs/architecture.svg`](docs/architecture.svg)
+
+---
+
 ## Tests
 
 Run the complete test suite:
@@ -442,7 +451,8 @@ bun test
 ✓ tests/apiServer.test.ts            (11 tests) - API endpoints, SQLite persistence, rate limiting
 ✓ tests/arcAgentLoop.test.ts         (7 tests)  - Live Arc RPC balance, allow/deny gating, agent loop
 ✓ tests/endToEndValidation.test.ts   (11 tests) - End-to-end Graph -> TEE -> Arc flow & policy gating
+✓ tests/phase7Integration.test.ts    (8 tests)  - Multi-layer connectivity, consecutive scenarios A/B, performance
 ✓ tests/privatesignal.test.ts        (5 tests)  - CRE workflow configuration, Base64 roundtrip, calldata
 
-Total: 50 pass, 0 fail (238 expect assertions)
+Total: 58 pass, 0 fail (293 expect assertions)
 ```
