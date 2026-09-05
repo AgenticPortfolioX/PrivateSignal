@@ -1,18 +1,7 @@
 /**
- * PrivateSignal — Arc Agent Loop Controller
- *
- * ============================================================================
- * AUTONOMOUS AGENT SPECIFICATION:
- * Complete closed-loop agent cycle:
- * 1. Verifies native USDC gas balance on Arc testnet (Circle L1).
- * 2. Pays native USDC fee for the score request.
- * 3. Submits risk evaluation (natural language or structured query) to the
- *    Chainlink CRE confidential core.
- * 4. Validates cryptographic attestation proof.
- * 5. Applies local policy threshold to the attested verdict.
- * 6. Executes score-gated action on Arc if threshold passes, or aborts if below.
- * 7. Returns end-to-end audit telemetry.
- * ============================================================================
+ * @title PrivateSignal Arc Agent Loop
+ * @author Justin Gramke
+ * @notice Orchestrates the closed-loop agent cycle including fee payment, evaluation, and score-gated execution.
  */
 
 import 'dotenv/config'
@@ -90,9 +79,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
   }
 
   try {
-    // -------------------------------------------------------------
-    // STEP 1: Verify Arc Native USDC Balance
-    // -------------------------------------------------------------
+
     const s1Start = Date.now()
     const balanceInfo = await getArcBalance()
     const requiredMinimum = DEFAULT_QUERY_FEE_USDC + (config.actionAmountUSDC || 0.1)
@@ -109,9 +96,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       Date.now() - s1Start,
     )
 
-    // -------------------------------------------------------------
-    // STEP 2: Submit Fee Payment on Arc Testnet
-    // -------------------------------------------------------------
+
     const s2Start = Date.now()
     let feeReceipt: PaymentReceipt
     if (config.dryRun) {
@@ -135,9 +120,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       Date.now() - s2Start,
     )
 
-    // -------------------------------------------------------------
-    // STEP 3: Route Query & Aggregate Graph Positions
-    // -------------------------------------------------------------
+
     const s3Start = Date.now()
     const queryInput =
       config.queryString || {
@@ -155,9 +138,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       Date.now() - s3Start,
     )
 
-    // -------------------------------------------------------------
-    // STEP 4: Execute Confidential TEE Scorer & Verify Attestation
-    // -------------------------------------------------------------
+
     const s4Start = Date.now()
     const queryId = `arc_agent_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     const style =
@@ -190,9 +171,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       Date.now() - s4Start,
     )
 
-    // -------------------------------------------------------------
-    // STEP 5: Policy Gating & Candidate Action Execution
-    // -------------------------------------------------------------
+
     const s5Start = Date.now()
     let gatedActionResult: GatedActionResult | undefined
 

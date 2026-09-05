@@ -1,13 +1,7 @@
 /**
- * PrivateSignal — Arc Wallet & Native USDC Payment Service
- *
- * ============================================================================
- * CRITICAL NETWORK CONSTRAINT:
- * Arc is a Circle L1 where USDC is the NATIVE gas token, not an ERC-20 contract.
- * - Standard native EVM transactions are used to transfer USDC.
- * - gasPrice and tx fees are paid in native USDC (18 decimals on Arc testnet).
- * - Absolutely DO NOT write ERC-20 approve() or transfer() calls for Arc gas or fees.
- * ============================================================================
+ * @title Arc Wallet & Native USDC Payment Service
+ * @author Justin Gramke
+ * @notice Handles native USDC payments on Arc L1.
  */
 
 import 'dotenv/config'

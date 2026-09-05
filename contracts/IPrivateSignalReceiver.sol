@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 /**
  * @title IPrivateSignalReceiver
+ * @author Justin Gramke
  * @notice Interface for on-chain contracts receiving attested private signals from CRE DON
  */
 interface IPrivateSignalReceiver {

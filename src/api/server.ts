@@ -1,20 +1,7 @@
 /**
- * PrivateSignal — Product API Server
- *
- * ============================================================================
- * ARCHITECTURE & PRIVACY CONTRACT:
- * - Endpoints:
- *   - POST /api/score: NL or structured risk query -> Graph fetch -> TEE Scorer -> Attested Score
- *   - GET /api/history: Query metadata history audit log from SQLite
- *   - GET /api/history/:queryId: Single query lookup
- *   - GET /api/health: Health check and DON status
- *   - GET /api/agent/status: Arc agent wallet status, USDC balance, payment history
- *
- * - Redacted Logging:
- *   Never logs private weights, thresholds, or intermediate mathematical calculations.
- * - Rate Limiter:
- *   10 requests per minute per IP.
- * ============================================================================
+ * @title PrivateSignal Product API
+ * @author Justin Gramke
+ * @notice Provides HTTP endpoints for routing score evaluations and retrieving audit history.
  */
 
 import express, { type Express, type Request, type Response, type NextFunction } from 'express'
@@ -37,7 +24,7 @@ app.set('json replacer', (_key: string, value: any) =>
   typeof value === 'bigint' ? value.toString() : value
 )
 
-// Rate limiter: 10 requests per minute per IP
+
 interface RateLimitWindow {
   count: number
   resetTime: number
@@ -68,7 +55,7 @@ export function rateLimitMiddleware(req: Request, res: Response, next: NextFunct
   next()
 }
 
-// Redacted logging helper — ensures zero private values are printed to stdout
+
 function logSanitizedAudit(action: string, metadata: Record<string, any>): void {
   const timestamp = new Date().toISOString()
   const cleanMeta = {
@@ -84,13 +71,12 @@ function logSanitizedAudit(action: string, metadata: Record<string, any>): void 
   console.log(`[AUDIT] ${JSON.stringify(cleanMeta)}`)
 }
 
-// POST /api/score
+
 app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) => {
   const startTime = Date.now()
   try {
     const body = req.body
 
-    // 1. Input parsing & validation (Natural language or structured)
     let queryInput: string | StructuredQueryInput
     if (typeof body.query === 'string' && body.query.trim().length > 0) {
       queryInput = body.query.trim()
@@ -109,20 +95,16 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
       return
     }
 
-    // 2. Route input to standardized Graph Query Plan
     const plan = routeToGraphQueryPlan(queryInput)
 
-    // 3. Fetch multi-protocol data via Graph Aggregator
     const graphResult = await aggregateLiveGraphData(plan.walletAddress, plan.protocols)
 
-    // 4. Load private policy configuration inside TEE context
-    // In production, this capability is loaded via cre.capabilities.Secrets
+
     const style = (plan.policyProfileId === 'conservative' || plan.policyProfileId === 'aggressive')
       ? plan.policyProfileId
       : 'balanced'
     const secrets = getDefaultSecretsForStyle(style)
 
-    // 5. Execute confidential scoring inside TEE enclave boundary
     const queryId = `ps_query_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
     const scoreOutput = await scoreCrossProtocolRisk(
       {
@@ -136,7 +118,6 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
       secrets,
     )
 
-    // 6. Verify attestation strictly (allow local prototype for demo)
     const attestationSummary = verifyAttestation(scoreOutput.attestation, undefined, true)
     if (!attestationSummary.valid) {
       res.status(502).json({
@@ -146,7 +127,6 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
       return
     }
 
-    // 7. Store ONLY query metadata in SQLite (zero secret weights / formulas stored)
     saveQueryMetadata({
       queryId,
       timestamp: scoreOutput.timestamp,
@@ -159,7 +139,6 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
 
     const durationMs = Date.now() - startTime
 
-    // 8. Log sanitized audit event
     logSanitizedAudit('EXECUTE_CONFIDENTIAL_SCORE', {
       walletAddress: plan.walletAddress,
       queryId,
@@ -169,7 +148,6 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
       durationMs,
     })
 
-    // 9. Return matching Output Contract
     res.status(200).json({
       score: scoreOutput.score,
       recommendation: scoreOutput.recommendation,
@@ -195,7 +173,7 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
   }
 })
 
-// GET /api/history
+
 app.get('/api/history', (_req: Request, res: Response) => {
   try {
     const history = getRecentQueries(20)
@@ -205,7 +183,7 @@ app.get('/api/history', (_req: Request, res: Response) => {
   }
 })
 
-// GET /api/history/:queryId
+
 app.get('/api/history/:queryId', (req: Request, res: Response) => {
   try {
     const queryId = String(req.params.queryId || '')
@@ -220,7 +198,7 @@ app.get('/api/history/:queryId', (req: Request, res: Response) => {
   }
 })
 
-// GET /api/agent/status
+
 app.get('/api/agent/status', async (_req: Request, res: Response) => {
   try {
     let agentAddress = process.env.ARC_AGENT_WALLET_ADDRESS || '0xfb79f82a690b91ab86c2299de4e7ecc228f61269'
@@ -269,7 +247,7 @@ app.get('/api/agent/status', async (_req: Request, res: Response) => {
   }
 })
 
-// POST /api/agent/run
+
 app.post('/api/agent/run', async (req: Request, res: Response) => {
   try {
     const body = req.body || {}
@@ -308,7 +286,7 @@ app.post('/api/agent/run', async (req: Request, res: Response) => {
   }
 })
 
-// GET /api/health
+
 app.get('/api/health', (_req: Request, res: Response) => {
   res.status(200).json({
     status: 'HEALTHY',

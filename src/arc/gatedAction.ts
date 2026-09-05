@@ -1,14 +1,7 @@
 /**
- * PrivateSignal — Score-Gated Action Execution on Arc Testnet
- *
- * ============================================================================
- * POLICY GATE CONTRACT:
- * Hard policy enforcement: No candidate transaction is dispatched to the Arc
- * network unless the attested confidential risk score meets or exceeds the
- * configured policy threshold.
- *
- * All transfers on Arc are native USDC transfers, not ERC-20 contract calls.
- * ============================================================================
+ * @title PrivateSignal Score-Gated Action Execution
+ * @author Justin Gramke
+ * @notice Enforces policy threshold before executing native USDC transfers on Arc testnet.
  */
 
 import 'dotenv/config'

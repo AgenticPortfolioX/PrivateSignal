@@ -1,19 +1,7 @@
 /**
- * PrivateSignal — Graph Schema Mapper
- *
- * ============================================================================
- * SCHEMA STANDARDIZATION RATIONALE:
- * DeFi lending protocols historically expose diverging GraphQL schemas:
- * - Aave uses the Messari Lending Schema (Account -> Position -> Market -> Token)
- * - Morpho on The Graph also utilizes the Messari Lending schema standard, but with
- *   different market ID hashing and liquidation parameters.
- * - Morpho Blue native API uses unique market keys with supplyShares / borrowShares.
- *
- * This mapper normalizes all protocol responses into a single canonical structure
- * (`NormalizedProtocolPosition` & `UnifiedAccountData`). Normalization ensures the
- * downstream confidential TEE risk scorer receives pure, sanitized mathematical inputs
- * regardless of the origin protocol.
- * ============================================================================
+ * @title PrivateSignal Graph Schema Mapper
+ * @author Justin Gramke
+ * @notice Normalizes disparate protocol GraphQL responses into a unified canonical structure.
  */
 
 import type { MessariSubgraphResponse, RawPosition, SupportedProtocol } from './queries'

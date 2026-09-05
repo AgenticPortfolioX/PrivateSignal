@@ -1,5 +1,11 @@
 'use client'
 
+/**
+ * @title RecommendationBadge Component
+ * @author Justin Gramke
+ */
+
+
 import React from 'react'
 import { ShieldCheck, AlertTriangle, AlertOctagon } from 'lucide-react'
 

@@ -1,5 +1,11 @@
 'use client'
 
+/**
+ * @title ScoreGauge Component
+ * @author Justin Gramke
+ */
+
+
 import React from 'react'
 
 interface Props {

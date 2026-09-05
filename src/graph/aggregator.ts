@@ -1,14 +1,7 @@
 /**
- * PrivateSignal — Live Graph Data Aggregator
- *
- * ============================================================================
- * AGGREGATOR RUNTIME SPECIFICATION:
- * Runs in the off-DON client / agent environment (where HTTP I/O is permitted).
- * Connects to live Graph Protocol endpoints, queries multi-protocol lending state,
- * normalizes disparate schemas via `schemaMapper.ts`, calculates cross-protocol
- * risk features, and packages the exact `NormalizedGraphData` payload to be fed
- * into the TEE confidential scorer.
- * ============================================================================
+ * @title PrivateSignal Graph Aggregator
+ * @author Justin Gramke
+ * @notice Connects to Graph endpoints to fetch and aggregate multi-protocol lending state.
  */
 
 import 'dotenv/config'
@@ -136,7 +129,6 @@ export function extractCrossProtocolFeatures(
   const ltv = combinedCollateralValue > 0 ? (totalDebtUSD / combinedCollateralValue) * 100 : 0
   const healthPressureIndex = calculateHealthPressureIndex(unified.healthFactor, ltv)
 
-  // 4. Calculate Correlated Asset Flags (ETH-staking derivatives)
   const correlatedAssetRatio = calculateAssetCorrelation(ethDerivativeCollateralUSD, combinedCollateralValue)
   const isEthDerivativeConcentrated = correlatedAssetRatio >= 0.35
 

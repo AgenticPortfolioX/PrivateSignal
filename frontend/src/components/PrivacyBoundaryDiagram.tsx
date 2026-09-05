@@ -1,5 +1,11 @@
 'use client'
 
+/**
+ * @title PrivacyBoundaryDiagram Component
+ * @author Justin Gramke
+ */
+
+
 import React, { useState } from 'react'
 import { Lock, Eye, EyeOff, ShieldCheck, ArrowRight, Server, Cpu } from 'lucide-react'
 

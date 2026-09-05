@@ -1,5 +1,11 @@
 'use client'
 
+/**
+ * @title AgentActionPanel Component
+ * @author Justin Gramke
+ */
+
+
 import React from 'react'
 import { Wallet, ArrowUpRight, DollarSign, Activity, CheckCircle, ShieldAlert } from 'lucide-react'
 import { ARC_AGENT_MOCK } from '../lib/mockData'

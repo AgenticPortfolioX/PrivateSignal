@@ -1,5 +1,11 @@
 'use client'
 
+/**
+ * @title AttestationCard Component
+ * @author Justin Gramke
+ */
+
+
 import React, { useState } from 'react'
 import { CheckCircle2, Shield, Copy, Check, Lock, ExternalLink } from 'lucide-react'
 

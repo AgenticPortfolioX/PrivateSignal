@@ -1,20 +1,7 @@
 /**
- * PrivateSignal — Standardized Multi-Protocol Graph Queries
- *
- * ============================================================================
- * LIVE SUBGRAPH ENDPOINT DOCUMENTATION:
- * The Graph Decentralized Network Endpoints (Messari Lending Schema Standard):
- * - Aave V3 Ethereum:
- *   ID: JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk
- *   URL: https://gateway.thegraph.com/api/{API_KEY}/subgraphs/id/JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk
- *
- * - Morpho Blue Ethereum:
- *   ID: 8Lz789DP5VKLXumTMTgygjU2xtuzx8AhbaacgN5PYCAs
- *   URL: https://gateway.thegraph.com/api/{API_KEY}/subgraphs/id/8Lz789DP5VKLXumTMTgygjU2xtuzx8AhbaacgN5PYCAs
- *
- * Official Morpho Blue Direct API Fallback:
- * - URL: https://blue-api.morpho.org/graphql
- * ============================================================================
+ * @title PrivateSignal Graph Queries
+ * @author Justin Gramke
+ * @notice Standardized Multi-Protocol Graph Queries for live subgraph endpoints.
  */
 
 export const SUPPORTED_PROTOCOLS = ['aave-v3', 'morpho', 'morpho-blue'] as const

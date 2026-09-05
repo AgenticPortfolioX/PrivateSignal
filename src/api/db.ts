@@ -1,14 +1,7 @@
 /**
- * PrivateSignal — Query History SQLite Storage
- *
- * ============================================================================
- * PRIVACY CONTRACT:
- * Stores ONLY sanitized public query metadata for demo audit logs:
- * - queryId, timestamp, walletAddress, score, recommendation, protocols, donId
- *
- * ABSOLUTELY NEVER stores:
- * - Model weights, private thresholds, intermediate features, or policy formulas.
- * ============================================================================
+ * @title PrivateSignal Query Storage
+ * @author Justin Gramke
+ * @notice SQLite storage for public metadata audit logs.
  */
 
 import { Database } from 'bun:sqlite'

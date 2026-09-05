@@ -1,16 +1,7 @@
 /**
- * PrivateSignal — Graph MCP / Natural Language Query Router
- *
- * ============================================================================
- * MCP ROUTER SPECIFICATION:
- * Translates freeform natural language prompts and structured JSON inputs into
- * deterministic Graph MCP tool invocations targeting `execute_graph_query`.
- *
- * Supported Prompts:
- * - "Score cross-protocol risk for wallet 0x123... across Aave and Morpho under conservative policy"
- * - "Is concentration in ETH-correlated collateral too high for cautious agent 0x456...?"
- * - "Check health factor and liquidation safety for 0x789... on Aave V3"
- * ============================================================================
+ * @title PrivateSignal Query Router
+ * @author Justin Gramke
+ * @notice Translates structured and natural language queries into deterministic MCP tool invocations.
  */
 
 import {

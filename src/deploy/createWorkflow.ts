@@ -1,9 +1,7 @@
 /**
- * PrivateSignal — CRE Confidential Workflow Deployment & Registration Script
- *
- * Connects to Chainlink Runtime Environment (CRE) on production DON,
- * registers the confidential risk scoring workflow, initializes Vault DON
- * encrypted secrets, and outputs verifiable deployment evidence.
+ * @title CRE Confidential Workflow Deployment & Registration
+ * @author Justin Gramke
+ * @notice Connects to Chainlink CRE on production DON, registers workflow, initializes Vault secrets, and outputs verifiable evidence.
  */
 
 import 'dotenv/config'

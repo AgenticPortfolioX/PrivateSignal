@@ -1,5 +1,11 @@
 'use client'
 
+/**
+ * @title Navbar Component
+ * @author Justin Gramke
+ */
+
+
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
