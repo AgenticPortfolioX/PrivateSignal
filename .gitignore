@@ -38,3 +38,10 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
+
+# Agent & Assistant configs
+CLAUDE.md
+claude.md
+gemini.md
+GEMINI.md
+.claude/
