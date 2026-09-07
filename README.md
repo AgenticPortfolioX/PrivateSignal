@@ -433,7 +433,7 @@ PrivateSignal is **not**:
 The true CRE execution is demonstrated via an independent deployed staging workflow on a private registry:
 
 - **Workflow Name:** `privatesignal-staging`
-- **Workflow ID:** `006da2b72e685b2639308a5397fc80a610f43c2d4bcb796121aefa4e62dd935f`
+- **Production Workflow ID:** `00cd6793e74ece8644e7700732e4e4f2649b315f4227a61f67de5598723356f3`
 - **Registry:** `private` *(Note: private registry executions do not produce on-chain txHashes)*
 - **Success Execution ID:** `99fcf049-d4db-49cf-bcda-898136718145` (Score 100/100 SAFE)
 - **Fail-Closed Execution ID:** `98725025-1acb-43c0-bb33-2f10913765d2` (GRAPH_DATA_UNAVAILABLE)

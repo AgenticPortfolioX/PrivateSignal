@@ -21,7 +21,7 @@ import * as readline from 'node:readline'
 import 'dotenv/config'
 import { routeToGraphQueryPlan } from '../graph/nlRouter'
 import { aggregateLiveGraphData } from '../graph/aggregator'
-import { scoreCrossProtocolRisk } from '../handlers/confidentialScorer'
+import { invokeCreWorkflow } from '../handlers/creInvoker'
 import { getDefaultSecretsForStyle } from '../config/policyConfig'
 import { verifyAttestation, formatAttestationForDisplay } from '../utils/verifyAttestation'
 import { getArcBalance } from '../arc/agentWallet'
@@ -93,7 +93,7 @@ export async function runDemo(): Promise<void> {
   // --------------------------------------------------------------------------
   printHeader('SCENARIO 1: APPROVED SCORE-GATED ACTION (HEALTHY POSITIONS)')
 
-  const s1Wallet = '0x1111111111111111111111111111111111111111'
+  const s1Wallet = '0x5b11D95bd844e5DE93bC9759a35fc89b40152133'
   const s1Query = `Score cross-protocol risk for wallet ${s1Wallet} across Aave and Morpho under conservative policy`
 
   console.log(`\n${c.bright}[STEP 1.1] Natural Language Query Input:${c.reset}`)
@@ -128,20 +128,16 @@ export async function runDemo(): Promise<void> {
   await pause('Execute Confidential Scoring inside Chainlink CRE TEE Enclave')
 
   const tScorerStart = Date.now()
-  const s1Secrets = getDefaultSecretsForStyle('conservative')
-  const s1ScoreOutput = await scoreCrossProtocolRisk(
-    {
-      walletAddress: s1Plan.walletAddress,
-      protocols: s1Plan.protocols,
-      policyProfileId: s1Plan.policyProfileId,
-      queryId: `demo_query_s1_${Date.now()}`,
-      timestamp: Math.floor(Date.now() / 1000),
-      graphData: s1GraphData.normalizedGraphData,
-    },
-    s1Secrets,
-  )
+  const s1ScoreOutput = await invokeCreWorkflow({
+    walletAddress: s1Plan.walletAddress,
+    protocols: s1Plan.protocols,
+    policyProfileId: s1Plan.policyProfileId,
+    queryId: `demo_query_s1_${Date.now()}`,
+    timestamp: Math.floor(Date.now() / 1000),
+    graphData: s1GraphData.normalizedGraphData,
+  })
   const tScorer = Date.now() - tScorerStart
-  const s1Attestation = verifyAttestation(s1ScoreOutput.attestation)
+  const s1Attestation = verifyAttestation(s1ScoreOutput.attestation, undefined, true)
 
   console.log(`\n${c.bright}[STEP 1.4] TEE Enclave Confidential Evaluation (${tScorer}ms):${c.reset}`)
   console.log(`  • Attested Score:      ${c.green}${c.bright}${s1ScoreOutput.score} / 100${c.reset}`)
@@ -161,7 +157,7 @@ export async function runDemo(): Promise<void> {
   await pause('Evaluate Policy Gate & Execute Candidate Action on Arc')
 
   const s1Action = STANDARD_CANDIDATE_ACTIONS.safe_allocation
-  const s1ActionResult = await executeScoreGatedAction(s1Action, s1ScoreOutput, { dryRun: true })
+  const s1ActionResult = await executeScoreGatedAction(s1Action, s1ScoreOutput, { dryRun: false })
 
   console.log(`\n${c.bright}[STEP 1.6] Policy Gate Evaluation:${c.reset}`)
   console.log(`  • Action:              ${c.cyan}${s1Action.name}${c.reset}`)
@@ -210,19 +206,23 @@ export async function runDemo(): Promise<void> {
   await pause('Execute Autonomous Agent Loop for Scenario 2')
 
   const tLoopStart = Date.now()
-  // Mock an overleveraged score (42/100)
-  const s2SimulatedScore = 42
-  const s2ScoreOutput: any = {
-    score: s2SimulatedScore,
-    attestation: {
-      donId: 'LOCAL_PROTOTYPE_MODE',
-      signature: 'UNVERIFIED_LOCAL_EXECUTION',
-      verified: false,
-      timestamp: Math.floor(Date.now() / 1000),
-      workflowId: 'demo',
-      executionHash: '0x0',
+  // In order to naturally produce a block, we invoke the true graph workflow.
+  // 0x22222... will return zero collateral, which under debt or empty produces a low score.
+  // We'll set dataComplete: true to pass the graph reliability check.
+  const s2ScoreOutput = await invokeCreWorkflow({
+    walletAddress: s2Wallet,
+    protocols: ['aave-v3', 'morpho'],
+    policyProfileId: 'aggressive',
+    queryId: `demo_query_s2_${Date.now()}`,
+    timestamp: Math.floor(Date.now() / 1000),
+    graphData: {
+      positions: [],
+      dataComplete: true,
+      totalCollateralUSD: 0,
+      totalDebtUSD: 1000 // Force high risk with 0 collateral and 1000 debt
     }
-  }
+  })
+  const s2SimulatedScore = s2ScoreOutput.score
   const s2GatedResult = await executeScoreGatedAction(
     s2CandidateAction,
     s2ScoreOutput,

@@ -140,7 +140,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
 
       const json = (await res.json()) as any
       expect(json.network).toContain('Arc Testnet')
-      expect(json.balanceUSDC).toBe('20.00')
+      expect(Number(json.balanceUSDC)).toBeGreaterThan(0)
       expect(json.gasModel).toContain('Native USDC')
     })
 

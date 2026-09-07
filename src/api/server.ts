@@ -9,7 +9,7 @@ import cors from 'cors'
 import 'dotenv/config'
 import { routeToGraphQueryPlan, type StructuredQueryInput } from '../graph/nlRouter'
 import { aggregateLiveGraphData } from '../graph/aggregator'
-import { scoreCrossProtocolRisk } from '../handlers/confidentialScorer'
+import { invokeCreWorkflow } from '../handlers/creInvoker'
 import { getDefaultSecretsForStyle } from '../config/policyConfig'
 import { verifyAttestation } from '../utils/verifyAttestation'
 import { saveQueryMetadata, getRecentQueries, getQueryById } from './db'
@@ -106,17 +106,14 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
     const secrets = getDefaultSecretsForStyle(style)
 
     const queryId = `ps_query_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    const scoreOutput = await scoreCrossProtocolRisk(
-      {
-        walletAddress: plan.walletAddress,
-        protocols: plan.protocols,
-        policyProfileId: plan.policyProfileId,
-        queryId,
-        timestamp: Math.floor(Date.now() / 1000),
-        graphData: graphResult.normalizedGraphData,
-      },
-      secrets,
-    )
+    const scoreOutput = await invokeCreWorkflow({
+      walletAddress: plan.walletAddress,
+      protocols: plan.protocols,
+      policyProfileId: plan.policyProfileId,
+      queryId,
+      timestamp: Math.floor(Date.now() / 1000),
+      graphData: graphResult.normalizedGraphData,
+    })
 
     const attestationSummary = verifyAttestation(scoreOutput.attestation, undefined, true)
 

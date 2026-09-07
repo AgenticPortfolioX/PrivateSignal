@@ -17,7 +17,7 @@ import {
 } from './gatedAction'
 import { routeToGraphQueryPlan } from '../graph/nlRouter'
 import { aggregateLiveGraphData } from '../graph/aggregator'
-import { scoreCrossProtocolRisk } from '../handlers/confidentialScorer'
+import { invokeCreWorkflow } from '../handlers/creInvoker'
 import { getDefaultSecretsForStyle } from '../config/policyConfig'
 import { verifyAttestation, type AttestationSummary } from '../utils/verifyAttestation'
 import type { ScoreOutput } from '../types/scorer'
@@ -120,17 +120,14 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
         : 'balanced'
     const secrets = getDefaultSecretsForStyle(style)
 
-    const scoreOutput: ScoreOutput = await scoreCrossProtocolRisk(
-      {
-        walletAddress: plan.walletAddress,
-        protocols: plan.protocols,
-        policyProfileId: plan.policyProfileId,
-        queryId,
-        timestamp: Math.floor(Date.now() / 1000),
-        graphData: graphData.normalizedGraphData,
-      },
-      secrets,
-    )
+    const scoreOutput = await invokeCreWorkflow({
+      walletAddress: plan.walletAddress,
+      protocols: plan.protocols,
+      policyProfileId: plan.policyProfileId,
+      queryId,
+      timestamp: Math.floor(Date.now() / 1000),
+      graphData: graphData.normalizedGraphData,
+    })
 
     const attestationSummary = verifyAttestation(scoreOutput.attestation, undefined, true)
     if (!attestationSummary.valid) {

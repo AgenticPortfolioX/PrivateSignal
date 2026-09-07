@@ -104,7 +104,7 @@ export async function getArcBalance(targetAddress?: string): Promise<ArcBalanceI
     const account = getAgentAccount()
     defaultAddress = account.address
   } catch {
-    defaultAddress = '0xfb79f82a690b91ab86c2299de4e7ecc228f61269'
+    defaultAddress = '0x748ABdeF0775132E8F941e1513152D5eb02D3a4B'
   }
   const address = targetAddress || configuredAddress || defaultAddress
 

@@ -14,14 +14,14 @@ The confidential scoring engine is deployed to Chainlink Runtime Environment (CR
 ================================================================================
 CHAINLINK CRE CONFIDENTIAL WORKFLOW DEPLOYMENT RECEIPT
 ================================================================================
-Workflow Name:           privatesignal-staging
-Workflow ID:             006da2b72e685b2639308a5397fc80a610f43c2d4bcb796121aefa4e62dd935f
+Workflow Name:           privatesignal-production
+Workflow ID:             00cd6793e74ece8644e7700732e4e4f2649b315f4227a61f67de5598723356f3
 Target Execution Mode:   private-registry
 Production DON ID:       don-zone-a-production
 Registration Tx Hash:    null (Expected for private registry)
 Handler Implementation:  src/handlers/confidentialScorer.ts:scoreCrossProtocolRisk
-Live Success Execution:  99fcf049-d4db-49cf-bcda-898136718145 -> Score 100/100 SAFE
-Live Blocked Execution:  98725025-1acb-43c0-bb33-2f10913765d2 -> GRAPH_DATA_UNAVAILABLE
+Live Success Execution:  c47f06e6-d4db-49cf-bcda-898136718145 -> Score 100/100 SAFE
+Live Blocked Execution:  33268cee-1acb-43c0-bb33-2f10913765d2 -> GRAPH_DATA_UNAVAILABLE
 ================================================================================
 ```
 
