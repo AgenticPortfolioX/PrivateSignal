@@ -292,7 +292,7 @@ export async function scoreCrossProtocolRisk(
   //    zero-position data (dataComplete) may proceed, and only then with no debt.
   const reliability = assessGraphDataReliability(params.graphData)
   if (reliability.status !== 'usable') {
-    throw new Error(reliability.reason)
+    throw new Error('DATA_UNAVAILABLE: ' + reliability.reason)
   }
 
   // 2. Resolve the effective policy numbers (profile actually applies).
@@ -361,26 +361,22 @@ export async function scoreCrossProtocolRisk(
 
   // 7. Coarse reason codes (non-identifying high-level indicators).
   const reasonCodes: string[] = []
-  if (healthScore >= 70) {
-    reasonCodes.push('HEALTH_FACTOR_NOMINAL')
-  } else if (healthScore < 40) {
-    reasonCodes.push('LIQUIDATION_PRESSURE_ELEVATED')
+  if (healthScore < 40) {
+    reasonCodes.push('HEALTH_FACTOR_PRESSURE')
   }
-  if (ltvScore >= 70) {
-    reasonCodes.push('LEVERAGE_CONSERVATIVE')
-  } else if (ltvScore < 40) {
-    reasonCodes.push('LEVERAGE_ELEVATED')
+  if (ltvScore < 40) {
+    reasonCodes.push('LTV_PRESSURE')
   }
-  if (concentrationScore >= 70) {
-    reasonCodes.push('COLLATERAL_DIVERSIFIED')
-  } else if (concentrationScore < 40) {
-    reasonCodes.push('COLLATERAL_CONCENTRATED')
+  if (concentrationScore < 40) {
+    reasonCodes.push('HIGH_CONCENTRATION')
   }
-  if (correlationScore < 50) {
-    reasonCodes.push('CORRELATED_ASSET_EXPOSURE')
+  if (params.protocols && params.protocols.length > 1 && features.combinedCollateralValue > 0) {
+    reasonCodes.push('CROSS_PROTOCOL_EXPOSURE')
   }
-  if (reasonCodes.length === 0) {
-    reasonCodes.push('RISK_METRICS_BALANCED')
+  
+  const hasPressure = healthScore < 40 || ltvScore < 40 || concentrationScore < 40
+  if (!hasPressure) {
+    reasonCodes.push('HEALTHY_PROFILE')
   }
 
   // 8. Honest execution envelope. This handler cannot produce real enclave
@@ -404,5 +400,7 @@ export async function scoreCrossProtocolRisk(
     attestation,
     queryId: params.queryId,
     timestamp: params.timestamp,
+    policyProfileId: params.policyProfileId,
+    protocols: params.protocols,
   }
 }

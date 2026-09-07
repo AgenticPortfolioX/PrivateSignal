@@ -151,6 +151,8 @@ export interface ScoreOutput {
   attestation: AttestationEnvelope
   queryId: string
   timestamp: number
+  policyProfileId: string
+  protocols: string[]
 }
 
 export interface CrossProtocolFeatures {

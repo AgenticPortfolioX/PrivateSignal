@@ -50,7 +50,7 @@ PrivateSignal hides the **decision model itself**.
 │  • Intermediate penalties and cross-protocol feature math               │
 │  • Policy profile behavior                                              │
 └────────────────────────────────────┬────────────────────────────────────┘
-                                     │  Cryptographic Attestation
+                                     │  Confidential Output
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                     OUTSIDE THE ENCLAVE (EMITTED)                       │
@@ -66,7 +66,7 @@ PrivateSignal hides the **decision model itself**.
 - If the TEE is removed, PrivateSignal has no durable edge.  
 - If the model is public, the strategy is already compromised.
 
-This is exactly the class of problem CRE Confidential Workflows are for: **privacy-preserving risk assessment and policy enforcement**, where sensitive parameters and intermediate computation must remain sealed while the application still receives a usable, verifiable result.
+This is exactly the class of problem CRE Confidential Workflows are for: **privacy-preserving risk assessment and policy enforcement**, where sensitive parameters and intermediate computation must remain sealed while the application still receives a usable, public result.
 
 ---
 
@@ -109,7 +109,7 @@ Most hackathon projects in this space do one of the following:
 - Wrap subgraph chat around public data
 - Hide credentials while leaving the decision logic public
 
-PrivateSignal does something narrower and harder to dismiss:
+PrivateSignal does something narrower and harder to dismiss. Oasis or Phala can host generic confidential compute, but this product thesis is **composability for agentic risk decisions across The Graph + Chainlink CRE + Circle Arc**.
 
 - The secret is the **scoring model**, not just credentials
 - The data path is **standardized multi-protocol Graph ingestion**, not one ad-hoc subgraph

@@ -84,7 +84,7 @@ describe('PrivateSignal: Confidential Core Scorer', () => {
 
     expect(output.score).toBeGreaterThanOrEqual(75)
     expect(output.recommendation).toBe('safe')
-    expect(output.reasonCodes).toContain('HEALTH_FACTOR_NOMINAL')
+    expect(output.reasonCodes).toContain('HEALTHY_PROFILE')
     expect(output.attestation.verified).toBe(false)
   })
 
@@ -93,7 +93,7 @@ describe('PrivateSignal: Confidential Core Scorer', () => {
 
     expect(output.score).toBeLessThan(50)
     expect(output.recommendation).toBe('high_risk')
-    expect(output.reasonCodes).toContain('LIQUIDATION_PRESSURE_ELEVATED')
+    expect(output.reasonCodes).toContain('HEALTH_FACTOR_PRESSURE')
   })
 
   it('strictly enforces the privacy boundary — no secret weights or intermediate calculations in output', async () => {
@@ -101,7 +101,7 @@ describe('PrivateSignal: Confidential Core Scorer', () => {
 
     const rawKeys = Object.keys(output)
     expect(rawKeys.sort()).toEqual(
-      ['attestation', 'queryId', 'reasonCodes', 'recommendation', 'score', 'timestamp'].sort(),
+      ['attestation', 'queryId', 'reasonCodes', 'recommendation', 'score', 'timestamp', 'policyProfileId', 'protocols'].sort(),
     )
 
     // Ensure no private model weights, thresholds, or intermediate feature variables leaked

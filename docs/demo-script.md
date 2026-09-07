@@ -26,7 +26,7 @@
   >  
   > Outside the enclave, everything is public: lending subgraph queries on Ethereum, RPC endpoints, and autonomous agents executing actions on Arc.  
   >  
-  > Inside the enclave, proprietary model weights and institutional risk policies loaded securely from Chainlink Vault DON secrets evaluate normalized protocol data. The host node operator, validators, and public observers cannot observe the algorithmic weights, feature scaling vectors, or intermediate scores. Only a cryptographically signed, zero-knowledge verifiable attestation envelope leaves the enclave."
+  > Inside the enclave, proprietary model weights and institutional risk policies loaded securely from Chainlink Vault DON secrets evaluate normalized protocol data. The host node operator, validators, and public observers cannot observe the algorithmic weights, feature scaling vectors, or intermediate scores. Only a public score and an honest envelope leaves the enclave."
 
 ---
 
@@ -46,25 +46,25 @@
   - DON ID: `don-zone-a-production`
   - Secrets loaded: `slot_vault_secrets_01` (proprietary weights, policy profiles)
   - Operator Log: `[PRIVACY MASKED] <intermediate calculation redacted>`
-  - Enclave Output: JSON attestation with SHA-256 execution hash and ECDSA signature.
+  - Enclave Output: JSON envelope with execution hash and public verdict.
 - **Audio / Narration:**
   > "Now, let's step inside the confidential execution. Chainlink's Decentralized Oracle Network—operating under DON ID `don-zone-a-production`—initializes an isolated WASM/QuickJS enclave.  
   >  
   > Watch the operator's view in this left panel: the node operator sees only encrypted memory pages. Proprietary model weights—penalizing extreme loan-to-value, collateral concentration, and liquid staking derivative depegging—are retrieved from Vault DON secrets directly into hardware-isolated registers.  
   >  
-  > In the right panel, inside the enclave, the scoring algorithm executes deterministically, computes the composite risk metric, generates an attestation envelope with an execution hash, and discards all secret state before emission."
+  > In the right panel, inside the enclave, the scoring algorithm executes deterministically, computes the composite risk metric, generates an envelope with an execution hash, and discards all secret state before emission."
 
 ---
 
 ### Scene 5: Attested Score Emission [2:15 - 2:45] (30 seconds)
-- **Visual:** Browser showing PrivateSignal Privacy Explorer UI at `http://localhost:3000`. Card displaying the emitted verifiable score: `Score: 82 / 100`, Status: `SAFE`, Reason Codes: `HEALTH_FACTOR_OPTIMAL`, `LTV_WITHIN_LIMITS`, DON Attestation Signature.
-- **Screen Capture:** UI inspector toggling between the Public Attestation payload and the Privacy Audit check, showing zero proprietary parameters leaked.
+- **Visual:** Browser showing PrivateSignal Privacy Explorer UI at `http://localhost:3000`. Card displaying the emitted verifiable score: `Score: 82 / 100`, Status: `SAFE`, Reason Codes: `HEALTHY_PROFILE`, `LTV_PRESSURE`, DON Envelope.
+- **Screen Capture:** UI inspector toggling between the Public Envelope payload and the Privacy Audit check, showing zero proprietary parameters leaked.
 - **Audio / Narration:**
   > "Here is the resulting score emitted to the autonomous agent and on-chain consumers.  
   >  
-  > The payload is lean, attested, and completely scrubbed of confidential data. The agent receives a normalized integer score from 0 to 100, an actionable recommendation—Safe, Caution, or High Risk—and explainable reason codes.  
+  > The payload is lean, honest, and completely scrubbed of confidential data. The agent receives a normalized integer score from 0 to 100, an actionable recommendation—Safe, Caution, or High Risk—and explainable reason codes.  
   >  
-  > Every emission carries an ECDSA attestation signature verifiable on-chain. Autonomous smart contracts and agents can verify the attestation without needing to know *how* the score was computed or *what* algorithmic weights were applied."
+  > Every emission carries an execution hash verifiable on-chain for idempotency. Autonomous smart contracts and agents can verify the envelope without needing to know *how* the score was computed or *what* algorithmic weights were applied."
 
 ---
 
@@ -80,7 +80,7 @@
   >  
   > In Step 1, the agent checks its native USDC balance and submits a 0.1 native USDC fee on Arc (Transaction `0x3c91...`).  
   >  
-  > In Step 2, upon receiving the CRE-attested score of 82, the agent evaluates its risk policy: because 82 exceeds the required 65 threshold, the policy gate triggers an **ALLOW**.  
+  > In Step 2, upon receiving the confidential-executed score of 82, the agent evaluates its risk policy: because 82 exceeds the required 65 threshold, the policy gate triggers an **ALLOW**.  
   >  
   > In Step 3, the agent autonomously executes a 0.2 native USDC capital allocation transaction (`0x7b4a...`) to the target protocol vault on Arc."
 
@@ -89,7 +89,7 @@
 ### Scene 7: Blocked Action Scenario (Aggressive Risk Gating) [3:30 - 4:00] (30 seconds)
 - **Visual:** Terminal and UI demonstrating a stressed wallet scenario (`0x2222...` with 92% LTV and low health factor). Policy gate rejecting the proposed capital deployment.
 - **Screen Capture:** 
-  - Terminal log showing `[POLICY_GATE_REJECTED] BLOCKED_BY_RISK_POLICY: Attested score (28) is below required policy threshold (70)`.
+  - Terminal log showing `[POLICY_GATE_REJECTED] BLOCKED_BY_RISK_POLICY: Evaluated score (28) is below required policy threshold (70)`.
   - Red security banner appearing in the UI.
 - **Audio / Narration:**
   > "What happens when market conditions deteriorate or an agent interacts with an overleveraged borrower? Let's test a stressed portfolio with 92% LTV and concentrated liquid staking exposure.  
@@ -150,8 +150,8 @@
 - **Arc Native Gas Currency:** `USDC` (18 Decimals)
 - **RPC URL:** `https://rpc.testnet.arc.circle.com`
 - **Chainlink DON ID:** `don-zone-a-production`
-- **Simulated Testnet Fee Tx:** `0x3c91a78e4d2091bc7829a1b02938e1a76c8914b9281a8903c7198e1b72a0f81d`
-- **Simulated Testnet Action Tx:** `0x7b4a28f01c8932b71940a831e9c801d937a015e821b0284c718a201c829e18b0`
+- **Illustrative Testnet Fee Tx:** `0x3c91a78e4d2091bc7829a1b02938e1a76c8914b9281a8903c7198e1b72a0f81d`
+- **Illustrative Testnet Action Tx:** `0x7b4a28f01c8932b71940a831e9c801d937a015e821b0284c718a201c829e18b0`
 - **Standardized Lending Subgraphs:**
   - Aave V3: `JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk`
   - Morpho: `8Lz789DP5VKLXumTMTgygjU2xtuzx8AhbaacgN5PYCAs`
