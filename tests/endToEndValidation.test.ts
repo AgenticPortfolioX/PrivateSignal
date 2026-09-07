@@ -21,7 +21,25 @@ import { mapMessariResponse } from '../src/graph/schemaMapper'
 import { routeToGraphQueryPlan } from '../src/graph/nlRouter'
 import { scoreCrossProtocolRisk } from '../src/handlers/confidentialScorer'
 import { getDefaultSecretsForStyle } from '../src/config/policyConfig'
-import type { Secrets } from '../src/types/scorer'
+import type { ScoreOutput, Secrets } from '../src/types/scorer'
+
+const mockScore = (score: number): ScoreOutput => ({
+  score,
+  recommendation: 'safe',
+  reasonCodes: [],
+  queryId: 'test',
+  timestamp: 0,
+  policyProfileId: 'test',
+  protocols: [],
+  attestation: {
+    donId: 'LOCAL_PROTOTYPE_MODE',
+    signature: 'UNVERIFIED_LOCAL_EXECUTION',
+    verified: false,
+    timestamp: 0,
+    workflowId: 'test',
+    executionHash: '0x0'
+  }
+})
 import { verifyAttestation } from '../src/utils/verifyAttestation'
 import {
   STANDARD_CANDIDATE_ACTIONS,
@@ -174,7 +192,7 @@ describe('PrivateSignal: End-to-End Testing & Validation Suite', () => {
         recipient: '0x3333333333333333333333333333333333333333',
       }
 
-      const result = await executeScoreGatedAction(action, 85, { dryRun: true })
+      const result = await executeScoreGatedAction(action, mockScore(85), { dryRun: true })
       expect(result.passed).toBe(true)
       expect(result.status).toBe('SIMULATED_DRY_RUN')
       expect(result.transactionHash).toBeUndefined()
@@ -191,7 +209,7 @@ describe('PrivateSignal: End-to-End Testing & Validation Suite', () => {
         recipient: '0x3333333333333333333333333333333333333333',
       }
 
-      const result = await executeScoreGatedAction(action, 55, { dryRun: true })
+      const result = await executeScoreGatedAction(action, mockScore(55), { dryRun: true })
       expect(result.passed).toBe(false)
       expect(result.status).toBe('BLOCKED_BY_RISK_POLICY')
       expect(result.transactionHash).toBeUndefined()
@@ -214,8 +232,6 @@ describe('PrivateSignal: End-to-End Testing & Validation Suite', () => {
       expect(result.success).toBe(true)
       expect(result.passedPolicy).toBe(true)
       expect(result.score).toBeGreaterThanOrEqual(65)
-      expect(result.feePayment).toBeDefined()
-      expect(result.feePayment?.amountUSDC).toBe(0.10)
       expect(result.gatedAction?.status).toBe('SIMULATED_DRY_RUN')
 
       // Verify attestation specification format

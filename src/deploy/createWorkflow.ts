@@ -23,11 +23,11 @@ export interface DeploymentEvidence {
   deploymentTimestamp: number
   handler: string
   attestationVerified: boolean
-  status: 'REGISTERED_ON_PRODUCTION_DON'
+  status: 'LOCAL_SIMULATION_ONLY'
 }
 
 export async function deployConfidentialWorkflow(): Promise<DeploymentEvidence> {
-  const donId = process.env.CRE_DON_ID || 'don-zone-a-production'
+  const donId = 'LOCAL_PROTOTYPE_MODE'
   const vaultSlot = process.env.VAULT_SECRET_SLOT || 'slot_privatesignal_weights_v1'
   const privateKey = process.env.AGENT_PRIVATE_KEY || process.env.CRE_ETH_PRIVATE_KEY
 
@@ -56,8 +56,8 @@ export async function deployConfidentialWorkflow(): Promise<DeploymentEvidence> 
   const workflowId = 'privatesignal-confidential-v1'
   const now = Math.floor(Date.now() / 1000)
 
-  // 2. Mock registration transaction hash on DON
-  const registrationTxHash = `0x7b4a${Buffer.from(`${workflowId}:${donId}:${now}`).toString('hex').slice(0, 60)}`
+  // 2. Local simulation has no real registration tx hash
+  const registrationTxHash = 'null (Expected for local simulation)'
 
   // 3. Verification Execution: Test with live sample Graph data
   const sampleParams: QueryParams = {
@@ -111,7 +111,7 @@ export async function deployConfidentialWorkflow(): Promise<DeploymentEvidence> 
     deploymentTimestamp: now,
     handler: 'src/handlers/confidentialScorer.ts:scoreCrossProtocolRisk',
     attestationVerified: result.attestation.verified,
-    status: 'REGISTERED_ON_PRODUCTION_DON',
+    status: 'LOCAL_SIMULATION_ONLY',
   }
 
   return evidence
@@ -122,13 +122,13 @@ if (import.meta.main || (process.argv[1] && process.argv[1].includes('createWork
   deployConfidentialWorkflow()
     .then((evidence) => {
       // Output deployment evidence
-      console.log(`\n=== CHAINLINK CRE CONFIDENTIAL WORKFLOW DEPLOYED ===`)
+      console.log(`\n=== CHAINLINK CRE WORKFLOW (LOCAL SIMULATION) ===`)
       console.log(`Workflow ID:            ${evidence.workflowId}`)
       console.log(`DON ID:                 ${evidence.donId}`)
       console.log(`Vault Secret Slot:      ${evidence.vaultSecretSlot}`)
       console.log(`Registration Tx:        ${evidence.registrationTxHash}`)
       console.log(`Handler:                ${evidence.handler}`)
-      console.log(`Attestation Status:     ${evidence.attestationVerified ? 'VERIFIED' : 'FAILED'}`)
+      console.log(`Attestation Status:     ${evidence.attestationVerified ? 'VERIFIED' : 'UNVERIFIED_LOCAL_EXECUTION'}`)
       console.log(`Status:                 ${evidence.status}`)
       console.log(`====================================================\n`)
     })

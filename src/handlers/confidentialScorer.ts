@@ -87,11 +87,9 @@ function parsePolicyProfiles(value: unknown): PolicyProfile[] {
         `INVALID_ENCLAVE_CONFIG: POLICY_PROFILES[${index}] has an unrecognized profileId`,
       )
     }
-    const multiplier = requireFiniteNumber(obj.multiplier, `POLICY_PROFILES[${index}].multiplier`)
     const profile: PolicyProfile = {
       profileId: canonical,
       name: typeof obj.name === 'string' ? obj.name : canonical,
-      multiplier,
     }
     if (obj.weightAdjustment !== undefined) {
       const adj = obj.weightAdjustment
@@ -198,7 +196,6 @@ export function loadSecretsFromProvider(provider: SecretProviderLike): Secrets {
 // ── Scoring core ─────────────────────────────────────────────────────────────
 
 interface ResolvedPolicy {
-  multiplier: number
   weights: number[]
   thresholds: PolicyThresholds
 }
@@ -223,7 +220,6 @@ export function resolvePolicy(
 
   if (!canonical) {
     return {
-      multiplier: 1.0,
       weights: secrets.modelWeights,
       thresholds: baseThresholds,
     }
@@ -240,7 +236,6 @@ export function resolvePolicy(
       ? profile.weightAdjustment
       : secrets.modelWeights
   return {
-    multiplier: Number(profile.multiplier) > 0 ? profile.multiplier : 1.0,
     weights: profileWeights,
     thresholds: profile.thresholds || baseThresholds,
   }
@@ -344,7 +339,7 @@ export async function scoreCrossProtocolRisk(
   // 5. Composite score.
   const rawWeightedScore =
     ltvScore * w0 + healthScore * w1 + concentrationScore * w2 + correlationScore * w3
-  let finalScore = Math.round(rawWeightedScore * policy.multiplier)
+  let finalScore = Math.round(rawWeightedScore)
   if (finalScore < 0) finalScore = 0
   if (finalScore > 100) finalScore = 100
 

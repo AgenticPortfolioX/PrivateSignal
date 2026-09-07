@@ -182,15 +182,7 @@ export async function aggregateLiveGraphData(
         const mapped = mapMessariResponse(protocol, rawResponse, normalizedWallet)
         protocolResults.push(mapped)
       } catch (err: any) {
-        // Log telemetry error and return empty position fallback for this protocol
-        // to maintain fault tolerance across oracles
-        protocolResults.push({
-          account: { id: normalizedWallet },
-          positions: [{ protocol, collateral: [], debt: [] }],
-          totalCollateralUSD: 0,
-          totalDebtUSD: 0,
-          healthFactor: 999.0,
-        })
+        throw new Error(`GRAPH_DATA_UNAVAILABLE: Protocol query failed for ${protocol}. Failing closed due to partial outage. Details: ${err.message}`)
       } finally {
         protocolLatencies[protocol] = Date.now() - pStart
       }
@@ -217,9 +209,8 @@ export async function aggregateLiveGraphData(
 
   const features = extractCrossProtocolFeatures(unifiedAccountData, positions)
 
-  if (unifiedAccountData.totalCollateralUSD === 0 && unifiedAccountData.totalDebtUSD === 0) {
-    throw new Error('GRAPH_DATA_UNAVAILABLE: No active positions found across any evaluated protocols. Failing closed to prevent default-safe scoring.')
-  }
+  // Explicitly allow verified empty wallets. If the query succeeded but returned 0 balances, 
+  // we pass the empty position to the scorer to be evaluated according to policy (TA-08).
 
   const normalizedGraphData: NormalizedGraphData = {
     positions,
@@ -228,6 +219,7 @@ export async function aggregateLiveGraphData(
     totalDebtUSD: unifiedAccountData.totalDebtUSD,
     correlatedCollateralUSD: Number((features.correlatedAssetRatio * unifiedAccountData.totalCollateralUSD).toFixed(2)),
     crossProtocolFeatures: features,
+    dataComplete: true,
   }
 
   const result: AggregatorResult = {

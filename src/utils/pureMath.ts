@@ -132,7 +132,7 @@ export function calculateConcentrationScore(
   }
   const maxRatio = maxSingleTokenValue / combinedCollateralValue
   // If 100% in one token -> score = 25. If <= 20% in max token -> score = 100
-  return Math.max(0, Math.min(100, Math.round((1 - (maxRatio - 0.2) / 0.8) * 100)))
+  return Math.max(25, Math.min(100, Math.round(((1 - maxRatio) / 0.8) * 75 + 25)))
 }
 
 /**
@@ -144,6 +144,7 @@ export function calculateConcentrationScore(
  * HF <= 1.0 -> 0 (Liquidatable)
  */
 export function calculateHealthPressureIndex(rawHF: number, _ltv?: number): number {
+  if (typeof rawHF !== 'number' || Number.isNaN(rawHF)) return 0
   if (rawHF <= 1.0) {
     return 0
   }

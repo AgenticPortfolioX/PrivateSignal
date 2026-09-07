@@ -43,16 +43,16 @@
 ### Scene 4: Confidential CRE Execution & Privacy Boundary [1:30 - 2:15] (45 seconds)
 - **Visual:** Terminal showing the Chainlink CRE workflow execution (`src/cre/workflow.ts` and `src/scoring/confidentialScorer.ts`). Display of simulated Operator View vs Enclave View side-by-side.
 - **Screen Capture:** Terminal output highlighting:
-  - DON ID: `don-zone-a-production`
-  - Secrets loaded: `slot_vault_secrets_01` (proprietary weights, policy profiles)
+  - DON ID: `LOCAL_PROTOTYPE_MODE`
+  - Secrets loaded: Local ENV (simulating Vault secrets)
   - Operator Log: `[PRIVACY MASKED] <intermediate calculation redacted>`
-  - Enclave Output: JSON envelope with execution hash and public verdict.
+  - Enclave Output: JSON envelope with simulated unverified status and public verdict.
 - **Audio / Narration:**
-  > "Now, let's step inside the confidential execution. Chainlink's Decentralized Oracle Network—operating under DON ID `don-zone-a-production`—initializes an isolated WASM/QuickJS enclave.  
+  > "Now, let's step inside the simulated execution. Operating in `LOCAL_PROTOTYPE_MODE` for the demo, we simulate the WASM/QuickJS enclave constraints locally.  
   >  
-  > Watch the operator's view in this left panel: the node operator sees only encrypted memory pages. Proprietary model weights—penalizing extreme loan-to-value, collateral concentration, and liquid staking derivative depegging—are retrieved from Vault DON secrets directly into hardware-isolated registers.  
+  > Watch the operator's view in this left panel: Proprietary model weights—penalizing extreme loan-to-value, collateral concentration, and liquid staking derivative depegging—are retrieved from local environment variables, mirroring how the real deployment fetches from Vault DON secrets into hardware-isolated registers.  
   >  
-  > In the right panel, inside the enclave, the scoring algorithm executes deterministically, computes the composite risk metric, generates an envelope with an execution hash, and discards all secret state before emission."
+  > In the right panel, the scoring algorithm executes deterministically, computes the composite risk metric, generates a local envelope, and discards all secret state before emission."
 
 ---
 
@@ -64,7 +64,7 @@
   >  
   > The payload is lean, honest, and completely scrubbed of confidential data. The agent receives a normalized integer score from 0 to 100, an actionable recommendation—Safe, Caution, or High Risk—and explainable reason codes.  
   >  
-  > Every emission carries an execution hash verifiable on-chain for idempotency. Autonomous smart contracts and agents can verify the envelope without needing to know *how* the score was computed or *what* algorithmic weights were applied."
+  > Every emission carries an execution hash. While the demo runs in an unverified local mode, the deployed private-registry version enables smart contracts and agents to cryptographically verify the envelope without needing to know *how* the score was computed."
 
 ---
 
@@ -78,11 +78,11 @@
   >  
   > A crucial technical highlight: on Arc, USDC is the native gas currency with 18 decimals—not an ERC-20 token. There are zero ERC-20 `approve` or `transferFrom` transactions. Our agent interacts directly via native value transfers using standard `msg.value` mechanics.  
   >  
-  > In Step 1, the agent checks its native USDC balance and submits a 0.1 native USDC fee on Arc (Transaction `0x3c91...`).  
+  > "In Step 1, the agent checks its native USDC balance and states the required 0.1 native USDC fee on Arc (fee payment is optional/simulated in this local demo loop).  
   >  
-  > In Step 2, upon receiving the confidential-executed score of 82, the agent evaluates its risk policy: because 82 exceeds the required 65 threshold, the policy gate triggers an **ALLOW**.  
+  > In Step 2, upon receiving the local score of 82, the agent evaluates its risk policy: because 82 exceeds the required 65 threshold, the policy gate triggers an **ALLOW**.  
   >  
-  > In Step 3, the agent autonomously executes a 0.2 native USDC capital allocation transaction (`0x7b4a...`) to the target protocol vault on Arc."
+  > In Step 3, the agent autonomously executes a 0.2 native USDC capital allocation transaction to the target protocol vault on Arc."
 
 ---
 
@@ -106,15 +106,14 @@
   - Running `bun test` showing 50/50 tests passing across all 6 test suites.
   - Showing `src/arc/arcClient.ts` confirming native USDC gas configuration (Chain ID 5042).
   - Showing `src/cre/workflow.ts` demonstrating WASM/QuickJS runtime compatibility.
-  - Verified transaction hashes on Arc Testnet.
 - **Audio / Narration:**
   > "For hackathon judges validating our implementation:  
   >  
-  > First, our automated test suite runs 50 comprehensive unit and end-to-end integration tests with 100% pass rate in under three seconds—testing standardized Graph queries, TEE privacy boundaries, Arc native USDC payments, and policy gating.  
+  > "First, our automated test suite runs comprehensive unit and end-to-end integration tests—testing standardized Graph queries, TEE privacy boundaries, Arc native USDC logic, and policy gating.  
   >  
-  > Second, check `src/arc/arcClient.ts`: notice our native USDC gas implementation on Arc Testnet (Chain ID 5042) without ERC-20 contract overhead.  
+  > Second, check `src/arc/agentWallet.ts`: notice our native USDC gas implementation on Arc Testnet (Chain ID 5042) without ERC-20 contract overhead.  
   >  
-  > Third, review `src/cre/workflow.ts`: all TEE handlers strictly adhere to Chainlink CRE WASM and QuickJS constraints."
+  > Third, review `src/handlers/confidentialScorer.ts`: all scoring handlers strictly adhere to Chainlink CRE WASM and QuickJS constraints, proven by our private-registry staging deployment."
 
 ---
 
@@ -135,11 +134,11 @@
 | **0:00 - 0:30** | Presentation Slide & UI Hero | 1920x1080 (60fps) | *"Autonomous AI agents and institutional treasuries..."* |
 | **0:30 - 1:00** | `docs/architecture.svg` | 1920x1080 (Zoom) | *"Notice the red boundary cutting through the center..."* |
 | **1:00 - 1:30** | VS Code (`queries.ts`, `schemaMapper.ts`) | 1920x1080 | *"Whether an agent passes a structured prompt..."* |
-| **1:30 - 2:15** | Terminal (`bun run demo` CRE phase) | 1920x1080 (Terminal) | *"Operating under DON ID don-zone-a-production..."* |
-| **2:15 - 2:45** | Chrome (`http://localhost:3000` Explorer) | 1920x1080 | *"The payload is lean, attested, and completely scrubbed..."* |
+| **1:30 - 2:15** | Terminal (`bun run demo` Local phase) | 1920x1080 (Terminal) | *"Operating in LOCAL_PROTOTYPE_MODE..."* |
+| **2:15 - 2:45** | Chrome (`http://localhost:3000` Explorer) | 1920x1080 | *"The payload is lean, honest, and completely scrubbed..."* |
 | **2:45 - 3:30** | Terminal & Arc Explorer | Split Screen 1080p | *"USDC is the native gas currency with 18 decimals..."* |
 | **3:30 - 4:00** | UI & Terminal (Blocked Scenario) | 1920x1080 | *"The policy gate instantly intercepts and aborts..."* |
-| **4:00 - 4:30** | Terminal (`bun test` 50 passing) | 1920x1080 | *"Our automated test suite runs 50 comprehensive tests..."* |
+| **4:00 - 4:30** | Terminal (`bun test`) | 1920x1080 | *"Our automated test suite runs comprehensive tests..."* |
 | **4:30 - 5:00** | Architecture Summary Slide & UI | 1920x1080 | *"PrivateSignal bridges the gap..."* |
 
 ---
@@ -149,9 +148,7 @@
 - **Arc Testnet Chain ID:** `5042`
 - **Arc Native Gas Currency:** `USDC` (18 Decimals)
 - **RPC URL:** `https://rpc.testnet.arc.circle.com`
-- **Chainlink DON ID:** `don-zone-a-production`
-- **Illustrative Testnet Fee Tx:** `0x3c91a78e4d2091bc7829a1b02938e1a76c8914b9281a8903c7198e1b72a0f81d`
-- **Illustrative Testnet Action Tx:** `0x7b4a28f01c8932b71940a831e9c801d937a015e821b0284c718a201c829e18b0`
+- **Chainlink DON ID (Local Demo):** `LOCAL_PROTOTYPE_MODE`
 - **Standardized Lending Subgraphs:**
   - Aave V3: `JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk`
   - Morpho: `8Lz789DP5VKLXumTMTgygjU2xtuzx8AhbaacgN5PYCAs`

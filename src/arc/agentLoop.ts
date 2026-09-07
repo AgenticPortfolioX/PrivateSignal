@@ -1,15 +1,13 @@
 /**
  * @title PrivateSignal Arc Agent Loop
  * @author Justin Gramke
- * @notice Orchestrates the closed-loop agent cycle including fee payment, evaluation, and score-gated execution.
+ * @notice Orchestrates the closed-loop agent cycle including evaluation, and score-gated execution.
  */
 
 import 'dotenv/config'
 import {
   getArcBalance,
-  payForScore,
-  type PaymentReceipt,
-  DEFAULT_QUERY_FEE_USDC,
+  getAgentAccount,
 } from './agentWallet'
 import {
   executeScoreGatedAction,
@@ -52,7 +50,6 @@ export interface AgentResult {
   recommendation: string
   threshold: number
   passedPolicy: boolean
-  feePayment?: PaymentReceipt
   gatedAction?: GatedActionResult
   attestationSummary: AttestationSummary
   steps: AgentLoopStep[]
@@ -82,7 +79,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
 
     const s1Start = Date.now()
     const balanceInfo = await getArcBalance()
-    const requiredMinimum = DEFAULT_QUERY_FEE_USDC + (config.actionAmountUSDC || 0.1)
+    const requiredMinimum = (config.actionAmountUSDC || 0.1)
 
     if (balanceInfo.balanceUSDC < requiredMinimum && !config.dryRun) {
       throw new Error(
@@ -94,30 +91,6 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       'SUCCESS',
       `Verified native USDC balance: ${balanceInfo.balanceUSDC} USDC on Arc Testnet`,
       Date.now() - s1Start,
-    )
-
-
-    const s2Start = Date.now()
-    let feeReceipt: PaymentReceipt
-    if (config.dryRun) {
-      feeReceipt = {
-        txHash: '0xSIMULATED_FEE_RECEIPT_DRY_RUN' as `0x${string}`,
-        amountUSDC: DEFAULT_QUERY_FEE_USDC,
-        payer: balanceInfo.address,
-        recipient: '0x748ABdeF0775132E8F941e1513152D5eb02D3a4B',
-        blockNumber: '0',
-        gasUsed: '0',
-        status: 'SUCCESS',
-        timestamp: Math.floor(Date.now() / 1000),
-      }
-    } else {
-      feeReceipt = await payForScore(DEFAULT_QUERY_FEE_USDC)
-    }
-    recordStep(
-      'PAY_USDC_FEE',
-      'SUCCESS',
-      `Sent ${feeReceipt.amountUSDC} native USDC fee on Arc (tx: ${feeReceipt.txHash.slice(0, 16)}...)`,
-      Date.now() - s2Start,
     )
 
 
@@ -213,7 +186,6 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       recommendation: scoreOutput.recommendation,
       threshold: config.policyThreshold,
       passedPolicy: scoreOutput.score >= config.policyThreshold,
-      feePayment: feeReceipt,
       gatedAction: gatedActionResult,
       attestationSummary,
       steps,

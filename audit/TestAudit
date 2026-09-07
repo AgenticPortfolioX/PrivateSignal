@@ -1,0 +1,95 @@
+# PrivateSignal — Full Codebase Test & Security Audit Prompt
+
+You are acting as an independent senior security auditor and QA engineer reviewing the `PrivateSignal` repository (`AgenticPortfolioX/PrivateSignal`) end to end. This is a confidential DeFi risk oracle: it ingests public on-chain data via The Graph, scores it privately inside a Chainlink CRE TEE, and gates real USDC-denominated agent actions on the Arc network based on that score. Treat this as pre-production financial infrastructure — assume real capital will eventually flow through the gated actions, and audit accordingly.
+
+Do not just skim. Read every file in `src/`, `privatesignal/`, `contracts/`, `frontend/`, `tests/`, and the config/deploy files at the repo root. Where behavior is unclear from reading, write a test to observe the actual behavior rather than guessing.
+
+## Ground rules
+
+- Produce a written report as you go (see "Deliverable format" below) — don't just fix things silently.
+- Every finding needs: file + line reference, a concrete reproduction (test case, input, or command), a severity rating, and a suggested fix.
+- Distinguish **confirmed bugs** (you reproduced them) from **suspected issues** (plausible but unverified) — don't blur the two.
+- If you modify code to fix something, note the diff and re-run the relevant tests; don't silently "improve" things outside the scope of a finding.
+- Flag anything you *can't* verify (e.g., real CRE DON behavior, real Arc mainnet conditions) as an explicit gap rather than assuming it's fine.
+
+---
+
+## Phase 1 — Test suite: run, extend, stress
+
+1. Run the existing suite (`bun test`) and confirm all 66 tests actually pass in a clean environment (fresh clone, fresh install — don't trust cached state).
+2. Run `bun run typecheck` and treat any suppressed/ignored TS errors (`@ts-ignore`, `any` casts, non-strict overrides) as findings, not non-issues.
+3. Map test coverage against the actual code paths in `src/`. For each module below, identify what is and isn't covered, then write the missing tests:
+   - `src/graph/schemaMapper.ts` — every supported protocol/schema variant, plus malformed or partial subgraph responses.
+   - `src/graph/aggregator.ts` — cross-protocol math (aggregate LTV, concentration, correlation): zero positions, single-protocol only, extreme leverage, conflicting/stale data from one protocol.
+   - `src/graph/nlRouter.ts` — ambiguous prompts, prompts naming unsupported protocols, prompt injection attempts embedded in the natural-language input.
+   - `src/handlers/confidentialScorer.ts` — boundary inputs (score exactly at threshold, negative/NaN/overflow inputs), and confirm no code path returns raw weights or thresholds under any input.
+   - `src/utils/pureMath.ts` — property-based tests (fuzz numeric inputs) for the scoring math, not just example-based tests.
+   - `src/arc/agentWallet.ts`, `src/arc/gatedAction.ts`, `src/arc/agentLoop.ts` — insufficient balance, RPC timeout/failure, transaction failure after fee payment, double-submission, and both allow/deny paths under adversarial inputs (not just the two happy-path demo wallets already in the README).
+   - `src/utils/verifyAttestation.ts` — tampered/forged attestation envelopes, expired or replayed attestations.
+   - `src/api/*` — every endpoint with malformed input, oversized payloads, and concurrent/rapid requests against the rate limiter.
+4. Add negative and adversarial tests specifically — the current suite (per the README) reads as scenario-driven ("Scenario 1 / Scenario 2"); it needs deliberately hostile inputs too.
+5. Run tests concurrently / under load where relevant (rate limiter, SQLite writes, Arc RPC calls) to surface race conditions.
+
+## Phase 2 — Security audit
+
+### 2.1 Secrets & key management
+- Confirm nothing in `secrets.yaml`, `.env`, or code ever logs, echoes, or serializes real key material — check every `console.log`/logging call and every API response shape.
+- Check `AGENT_PRIVATE_KEY` handling in `src/arc/agentWallet.ts`: how it's loaded, whether it ever touches disk unencrypted, whether it could leak via an error stack trace or crash dump.
+- Confirm `.gitignore` actually excludes `.env` and any local secret files, and check git history for any accidentally committed secrets (`git log -p -- .env secrets.yaml` and a broader secret-scan of full history, not just HEAD).
+- Verify `VAULT_SECRET_SLOT` / Vault DON secret loading in the CRE workflow can't be substituted or spoofed by a non-DON caller.
+
+### 2.2 Confidential compute boundary (the actual product claim)
+- This is the core security claim of the project — verify it doesn't just look sealed, but is provably sealed.
+- Trace every output of `confidentialScorer.ts` and confirm no code path (including error paths, logs, and exceptions) can leak raw weights, thresholds, or intermediate feature vectors outside the enclave boundary.
+- Check error handling specifically: a common TEE leak vector is stack traces or error messages that echo internal state on failure. Force-trigger errors (malformed input, missing secrets, math overflow) and inspect exactly what's returned.
+- Confirm the WASM/QuickJS compile target genuinely excludes `fs`, `crypto`, `http`, and browser globals as claimed — don't just trust the README, check the build config and try to call them.
+- Verify the "no bypass" claim: confirm there is no code path (dev mode, test mode, feature flag) that lets an agent get a score or a gate decision without going through the confidential handler.
+- Assess `LOCAL_PROTOTYPE_MODE` carefully: does the local harness enforce the exact same rules as the real DON path, or could local/prod behavior diverge in a way that matters for the judged claims?
+
+### 2.3 Financial / payment logic (Arc + USDC)
+- Verify fee amount (`ARC_FEE_AMOUNT_USDC=0.10`) is enforced server-side, not just assumed from config — can a client manipulate the amount paid?
+- Check for double-spend / replay risk: can the same payment or attestation be reused to get multiple scores or bypass a subsequent gate check?
+- Confirm ordering/atomicity between "fee paid" and "score delivered" — what happens if the process crashes between payment and scoring? Money lost? Free score given? Retry-safe?
+- Audit decimal handling carefully: the README states Arc's native USDC uses 18 decimals, which differs from USDC's standard 6 decimals elsewhere — check every place a USDC amount is parsed, compared, or formatted for a decimal-mismatch bug (this is a classic source of real fund loss).
+- Check the ALLOW/DENY gate logic in `gatedAction.ts` for off-by-one errors at the exact threshold boundary, and for what happens if the score or threshold is missing/null.
+- Confirm there's no path where an agent can execute the gated action *without* a valid, verified score attached.
+
+### 2.4 Input validation & injection
+- Every wallet address, protocol name, and free-text prompt reaching `nlRouter.ts` and the API layer: test with malformed addresses, SQL/NoSQL-injection-style strings (checked against the SQLite audit store), oversized strings, and unicode/encoding edge cases.
+- Check the SQLite audit storage layer for parameterized queries vs. string concatenation.
+- Check subgraph query construction in `src/graph/queries.ts` for injection risk if any user input is interpolated into GraphQL queries.
+
+### 2.5 Dependency & supply chain
+- Run `bun pm ls` / audit `bun.lock` and `package.json` for known-vulnerable or abandoned dependencies.
+- Check `binary.wasm.br.b64` — confirm this checked-in binary is reproducible from source (i.e., verify what it actually is and whether it could be stale or tampered relative to the source it claims to represent).
+- Review `scaffold_cre.ps1` and any install/deploy scripts for anything that fetches and executes remote code without integrity checks.
+
+### 2.6 API & rate limiting
+- Confirm the sliding-window rate limiter can't be bypassed (IP spoofing, header manipulation, distributed requests).
+- Load-test the rate limiter's actual behavior at and beyond its stated limits.
+- Check CORS, auth (or intentional lack thereof), and whether any endpoint exposes more than the "redacted public metadata" the README claims.
+
+## Phase 3 — Architecture & logic review
+
+- Re-derive the cross-protocol risk math independently from `pureMath.ts` and `aggregator.ts` and confirm it matches the stated methodology (LTV aggregation, concentration penalty, correlation factors) — look for sign errors, wrong weighting, or double-counting across protocols.
+- Review `policyConfig.ts` for the conservative/balanced/aggressive profiles: confirm thresholds are internally consistent (e.g., "aggressive" isn't accidentally stricter than "conservative").
+- Review `schemaMapper.ts` for correctness against the actual current Aave V3 and Morpho Blue subgraph schemas (schemas drift over time — confirm the mapping isn't stale).
+- Assess failure-mode design: when The Graph is unavailable, when CRE is unreachable, when Arc RPC is down — does the system fail closed (deny/refuse) in every case, or could any failure mode default to an unsafe "allow"?
+
+## Phase 4 — Code quality
+
+- Flag dead code, unused exports, and inconsistent error-handling patterns (some paths throw, some return error objects, some silently default).
+- Check TypeScript strictness end to end — no `any` leaking into financial or scoring logic.
+- Review naming/documentation drift between `docs/architecture.md` and the actual current code.
+
+---
+
+## Deliverable format
+
+Produce a single audit report with:
+
+1. **Executive summary** — overall risk posture in a few sentences, and whether the core "confidential boundary" and "financial gating" claims hold up under adversarial testing.
+2. **Findings table** — for each finding: ID, title, severity (Critical / High / Medium / Low / Informational), file:line, description, reproduction steps, suggested fix, status (confirmed/suspected).
+3. **New/updated tests** — list every test you added, what it covers, and pass/fail result.
+4. **Coverage gaps** — anything you could not test (e.g., real CRE DON, real Arc mainnet) and why.
+5. **Prioritized remediation list** — ordered by severity and by what's load-bearing for the core product claims (confidentiality boundary and payment gating first).

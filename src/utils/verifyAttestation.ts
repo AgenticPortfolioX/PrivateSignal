@@ -93,7 +93,10 @@ export function verifyAttestation(
   if (isLocalPrototype && allowUnverifiedLocal) {
     isValid = true // Allowed for demo purposes, but distinctly marked
   } else {
-    isValid = Boolean(verified && hashMatches && isValidSignatureFormat)
+    // We cannot cryptographically verify a real DON signature here without SDK integration.
+    // Therefore, any self-asserted "verified: true" claim from the payload MUST be rejected 
+    // as unverified to prevent forgery, unless loud local overrides are engaged.
+    isValid = false 
   }
 
   const formattedDate = new Date(timestamp * 1000).toLocaleString('en-US', {

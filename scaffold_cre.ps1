@@ -106,7 +106,7 @@ COINGECKO_API_KEY=your_coingecko_api_key_here
 ARC_RPC_URL=https://rpc.testnet.arc.network
 ARC_CHAIN_ID=5042002
 ARC_AGENT_WALLET_ADDRESS=your_wallet_address_here
-ARC_FEE_AMOUNT_USDC=0.10
+
 "@
 Set-Content -Path ".env" -Value $envContent
 

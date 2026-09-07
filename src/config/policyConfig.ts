@@ -36,21 +36,18 @@ export const STANDARD_POLICY_PROFILES: PolicyProfile[] = [
   {
     profileId: 'conservative-v1',
     name: 'Conservative Risk Policy',
-    multiplier: 1.15,
     weightAdjustment: [0.35, 0.25, 0.2, 0.2],
     thresholds: CONSERVATIVE_THRESHOLDS,
   },
   {
     profileId: 'balanced-v1',
     name: 'Balanced Market Policy',
-    multiplier: 1.0,
     weightAdjustment: [0.3, 0.2, 0.2, 0.3],
     thresholds: BALANCED_THRESHOLDS,
   },
   {
     profileId: 'aggressive-v1',
     name: 'High Yield Capital Efficiency Policy',
-    multiplier: 0.85,
     weightAdjustment: [0.25, 0.2, 0.25, 0.3],
     thresholds: AGGRESSIVE_THRESHOLDS,
   },

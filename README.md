@@ -197,7 +197,7 @@ Chainlink CRE Confidential Workflow (TEE)
         │
         ▼
 Arc Agent Loop (Circle L1)
-  ├─ Pay native USDC fee for the score
+
   ├─ Evaluate policy gate against threshold
   ├─ ALLOW: Dispatch capital / rebalance position
   └─ DENY: Strictly block action and preserve capital
@@ -209,7 +209,7 @@ Arc Agent Loop (Circle L1)
 | :--- | :--- | :--- |
 | **Sealed Inside TEE** | Strategy weights, policy threshold matrices, intermediate calculations, enclave signing material | Never leaves hardware enclave; completely inaccessible to node operator and public |
 | **Allowed to Leave** | Final score (0–100), recommendation, sanitized reason codes, honest non-claiming attestation envelope | Public verdict with zero proprietary state leakage |
-| **Public by Nature** | On-chain positions indexed by The Graph, Arc fee and action transactions | Visible on Ethereum and Arc public ledgers |
+| **Public by Nature** | On-chain positions indexed by The Graph and action transactions | Visible on Ethereum and Arc public ledgers |
 
 ---
 
@@ -302,7 +302,7 @@ GRAPH_API_ENDPOINT=https://gateway.thegraph.com/api/your_graph_api_key/subgraphs
 ARC_RPC_URL=https://rpc.testnet.arc.circle.com
 ARC_CHAIN_ID=5042
 ARC_AGENT_WALLET_ADDRESS=0xfb79f82a690b91ab86c2299de4e7ecc228f61269
-ARC_FEE_AMOUNT_USDC=0.10
+
 AGENT_PRIVATE_KEY=your_private_key_here
 ```
 
@@ -342,7 +342,7 @@ bun run deploy:workflow
 - **Execution Flow**:
   1. Graph aggregates live multi-protocol positions across Aave V3 and Morpho.
   2. CRE TEE evaluates portfolio and emits public healthy score: `100 / 100` (`SAFE`).
-  3. Arc agent pays 0.10 native USDC query fee (Tx: `0x3c91...`).
+  3. Arc agent evaluates policy gate.
   4. Policy gate evaluates `100 >= 65` $\rightarrow$ **PERMITTED**.
   5. Agent executes permitted action on Arc: 0.20 native USDC transfer (Tx: `0x7b4a...`).
   6. Public receipt records payment and action with zero leaked strategy weights.
@@ -352,7 +352,7 @@ bun run deploy:workflow
 - **Execution Flow**:
   1. Graph aggregates positions revealing 91.76% aggregate LTV and low health factor.
   2. CRE TEE enclave detects high leverage and staking derivative concentration, emitting score: `42 / 100` (`HIGH_RISK`).
-  3. Arc agent pays 0.10 native USDC evaluation fee.
+  3. Arc agent evaluates policy gate.
   4. Policy gate evaluates `42 < 80` $\rightarrow$ **REJECTED**.
   5. **No capital is dispatched on Arc**, completely protecting the agent treasury.
   6. Public receipt logs the refusal reason without leaking model internals.
@@ -368,7 +368,7 @@ bun run deploy:workflow
 | **Graph Subgraph Queries** | **LIVE** | Introspected queries to live decentralized network subgraphs (Aave V3 & Morpho) |
 | **CRE Confidential Scoring Path** | **LIVE** | Deployed to private staging registry; interactive app routes locally using identical model |
 | **Arc RPC & Balances** | **LIVE** | Live JSON-RPC queries to Arc Testnet (`https://rpc.testnet.arc.circle.com`) |
-| **Arc Fee & Gated Actions** | **LIVE** | Native USDC value transfers (18 decimals), both allow and deny paths |
+| **Gated Actions** | **LIVE** | Native USDC value transfers (18 decimals), both allow and deny paths |
 | **Attestation Verification** | **OPTIONAL** | App-level verification is explicit (`verified:false`) to reflect honest envelope |
 | **Offline Fallback** | **OPTIONAL** | Mock fixtures provided for local CI / dry runs without external RPC dependencies |
 
@@ -400,7 +400,7 @@ bun run deploy:workflow
 - **Gated Action Execution**: [`src/arc/gatedAction.ts`](src/arc/gatedAction.ts)
 - **Autonomous Agent Loop**: [`src/arc/agentLoop.ts`](src/arc/agentLoop.ts)
 
-*What to look for: Native USDC fee (not ERC-20), hard threshold enforcement, and first-class blocked and allowed outcomes.*
+*What to look for: hard threshold enforcement, and first-class blocked and allowed outcomes.*
 
 ---
 

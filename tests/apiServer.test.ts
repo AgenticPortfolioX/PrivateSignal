@@ -16,20 +16,20 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
   const sampleWallet = '0x1111111111111111111111111111111111111111'
 
   describe('Task 2: Attestation Verification Helper', () => {
-    it('verifies valid Chainlink CRE attestation envelope', () => {
+    it('verifies explicit local prototype attestation envelope when allowed', () => {
       const validAttestation = {
         donId: 'LOCAL_PROTOTYPE_MODE',
         workflowId: 'privatesignal-confidential-v1',
         executionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        signature: '0xattest_1234567890abcdef1234567890abcdef',
+        signature: 'UNVERIFIED_LOCAL_EXECUTION',
         timestamp: 1757000000,
-        verified: true,
+        verified: false,
       }
 
       const summary = verifyAttestation(validAttestation, undefined, true)
       expect(summary.valid).toBe(true)
-      expect(summary.verified).toBe(true)
-      expect(summary.status).toBe('VERIFIED_ENCLAVE_EXECUTION')
+      expect(summary.verified).toBe(false)
+      expect(summary.status).toBe('MISSING_ATTESTATION') // It is missing a real attestation, but valid for local dev
       expect(summary.donId).toBe('LOCAL_PROTOTYPE_MODE')
       expect(summary.workflowId).toBe('privatesignal-confidential-v1')
       expect(summary.shortHash).toContain('0x1234')
@@ -63,15 +63,15 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
         donId: 'LOCAL_PROTOTYPE_MODE',
         workflowId: 'privatesignal-confidential-v1',
         executionHash: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
-        signature: '0xattest_1234567890abcdef1234567890abcdef',
+        signature: 'UNVERIFIED_LOCAL_EXECUTION',
         timestamp: 1757000000,
-        verified: true,
+        verified: false,
       }
 
       const summary = verifyAttestation(validAttestation, undefined, true)
       const display = formatAttestationForDisplay(summary)
 
-      expect(display['Enclave Status']).toContain('VERIFIED')
+      expect(display['Enclave Status']).toContain('UNVERIFIED')
       expect(display['DON Identifier']).toBe('LOCAL_PROTOTYPE_MODE')
       expect(display['Workflow ID']).toBe('privatesignal-confidential-v1')
     })
@@ -220,7 +220,7 @@ describe('PrivateSignal: API Server & Attestation Verification', () => {
       const json = (await res.json()) as any
       expect(json.success).toBe(true)
       expect(json.passedPolicy).toBe(true)
-      expect(json.steps.length).toBeGreaterThanOrEqual(5)
+      expect(json.steps.length).toBeGreaterThanOrEqual(4)
       expect(json.gatedAction).toBeDefined()
       expect(json.gatedAction.status).toBe('SIMULATED_DRY_RUN')
     })

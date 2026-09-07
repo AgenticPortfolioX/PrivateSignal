@@ -8,13 +8,32 @@
  */
 
 import { describe, it, expect } from 'bun:test'
-import { getArcBalance, getAgentAccount, DEFAULT_QUERY_FEE_USDC } from '../src/arc/agentWallet'
+import { getArcBalance, getAgentAccount } from '../src/arc/agentWallet'
 import {
   executeScoreGatedAction,
   STANDARD_CANDIDATE_ACTIONS,
   type CandidateAction,
 } from '../src/arc/gatedAction'
 import { runAgentLoop, type AgentConfig } from '../src/arc/agentLoop'
+import type { ScoreOutput } from '../src/types/scorer'
+
+const mockScore = (score: number): ScoreOutput => ({
+  score,
+  recommendation: 'safe',
+  reasonCodes: [],
+  queryId: 'test',
+  timestamp: 0,
+  policyProfileId: 'test',
+  protocols: [],
+  attestation: {
+    donId: 'LOCAL_PROTOTYPE_MODE',
+    signature: 'UNVERIFIED_LOCAL_EXECUTION',
+    verified: false,
+    timestamp: 0,
+    workflowId: 'test',
+    executionHash: '0x0'
+  }
+})
 
 describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
   const sampleWallet = '0x1111111111111111111111111111111111111111'
@@ -47,7 +66,7 @@ describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
 
     it('allows execution when attested score satisfies policy threshold (allow path)', async () => {
       const passingScore = 85 // 85 >= 70
-      const result = await executeScoreGatedAction(candidate, passingScore, { dryRun: true })
+      const result = await executeScoreGatedAction(candidate, mockScore(passingScore), { dryRun: true })
 
       expect(result.passed).toBe(true)
       expect(result.status).toBe('SIMULATED_DRY_RUN')
@@ -59,7 +78,7 @@ describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
 
     it('strictly aborts execution when attested score is below threshold (deny path)', async () => {
       const failingScore = 52 // 52 < 70
-      const result = await executeScoreGatedAction(candidate, failingScore, { dryRun: true })
+      const result = await executeScoreGatedAction(candidate, mockScore(failingScore), { dryRun: true })
 
       expect(result.passed).toBe(false)
       expect(result.status).toBe('BLOCKED_BY_RISK_POLICY')
@@ -76,7 +95,7 @@ describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
       // Safe allocation (threshold 65) should pass
       const safeRes = await executeScoreGatedAction(
         STANDARD_CANDIDATE_ACTIONS.safe_allocation,
-        moderateScore,
+        mockScore(moderateScore),
         { dryRun: true },
       )
       expect(safeRes.passed).toBe(true)
@@ -84,7 +103,7 @@ describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
       // Yield strategy (threshold 80) should fail
       const yieldRes = await executeScoreGatedAction(
         STANDARD_CANDIDATE_ACTIONS.yield_strategy,
-        moderateScore,
+        mockScore(moderateScore),
         { dryRun: true },
       )
       expect(yieldRes.passed).toBe(false)
@@ -108,13 +127,11 @@ describe('PrivateSignal: Arc Agent Integration & Gated Action Loop', () => {
       expect(result.score).toBeLessThanOrEqual(100)
       expect(result.attestationSummary.valid).toBe(true)
       expect(result.attestationSummary.workflowId).toBe('privatesignal-local-harness')
-      expect(result.feePayment).toBeDefined()
       expect(result.gatedAction).toBeDefined()
-      expect(result.steps.length).toBeGreaterThanOrEqual(5)
+      expect(result.steps.length).toBeGreaterThanOrEqual(4)
 
       const stepNames = result.steps.map((s) => s.name)
       expect(stepNames).toContain('CHECK_ARC_BALANCE')
-      expect(stepNames).toContain('PAY_USDC_FEE')
       expect(stepNames).toContain('FETCH_GRAPH_DATA')
       expect(stepNames).toContain('CONFIDENTIAL_TEE_SCORING')
       expect(stepNames).toContain('POLICY_GATE_EVALUATION')

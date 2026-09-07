@@ -13,7 +13,7 @@ import { scoreCrossProtocolRisk } from '../handlers/confidentialScorer'
 import { getDefaultSecretsForStyle } from '../config/policyConfig'
 import { verifyAttestation } from '../utils/verifyAttestation'
 import { saveQueryMetadata, getRecentQueries, getQueryById } from './db'
-import { getArcBalance, getAgentAccount, DEFAULT_QUERY_FEE_USDC } from '../arc/agentWallet'
+import { getArcBalance, getAgentAccount } from '../arc/agentWallet'
 import { runAgentLoop, type AgentConfig } from '../arc/agentLoop'
 import { STANDARD_CANDIDATE_ACTIONS } from '../arc/gatedAction'
 
@@ -119,13 +119,6 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
     )
 
     const attestationSummary = verifyAttestation(scoreOutput.attestation, undefined, true)
-    if (!attestationSummary.valid) {
-      res.status(502).json({
-        error: 'INVALID_ATTESTATION',
-        message: 'The confidential score failed cryptographic attestation verification from the Chainlink CRE DON',
-      })
-      return
-    }
 
     saveQueryMetadata({
       queryId,
@@ -157,12 +150,6 @@ app.post('/api/score', rateLimitMiddleware, async (req: Request, res: Response) 
       attestationSummary,
       queryId,
       timestamp: scoreOutput.timestamp,
-      featuresSummary: {
-        combinedCollateralValue: graphResult.features.combinedCollateralValue,
-        totalDebtUSD: graphResult.features.totalDebtUSD,
-        concentrationScore: graphResult.features.concentrationScore,
-        healthPressureIndex: graphResult.features.healthPressureIndex,
-      },
     })
   } catch (error: any) {
     console.error('[API_ERROR]', error.message || error)
@@ -229,7 +216,7 @@ app.get('/api/agent/status', async (_req: Request, res: Response) => {
       agentWalletAddress: agentAddress,
       balanceUSDC: balanceFormatted,
       balanceRaw,
-      feePerQueryUSDC: (DEFAULT_QUERY_FEE_USDC).toFixed(2),
+
       gasModel: 'Native USDC for gas (zero ETH needed)',
       paymasterSupport: 'Arc native gas model natively uses USDC without separate paymaster contract',
       liveRpcConnected: isLive,
@@ -248,20 +235,31 @@ app.get('/api/agent/status', async (_req: Request, res: Response) => {
 })
 
 
-app.post('/api/agent/run', async (req: Request, res: Response) => {
+app.post('/api/agent/run', rateLimitMiddleware, async (req: Request, res: Response) => {
   try {
+    if (process.env.AGENT_RUN_TOKEN) {
+      const auth = req.headers.authorization
+      if (!auth || auth !== `Bearer ${process.env.AGENT_RUN_TOKEN}`) {
+        res.status(401).json({ error: 'UNAUTHORIZED', message: 'Invalid or missing AGENT_RUN_TOKEN' })
+        return
+      }
+    }
     const body = req.body || {}
     const walletAddress = typeof body.walletAddress === 'string' && body.walletAddress.trim().length > 0
       ? body.walletAddress.trim()
       : '0x1111111111111111111111111111111111111111'
 
     const policyThreshold = typeof body.policyThreshold === 'number'
-      ? body.policyThreshold
+      ? Math.max(0, Math.min(100, body.policyThreshold)) // Bound 0-100
       : 70
 
     const candidateAction = ['allocate', 'transfer', 'none'].includes(body.candidateAction)
       ? body.candidateAction
       : 'allocate'
+
+    const actionAmountUSDC = typeof body.actionAmountUSDC === 'number'
+      ? Math.min(10, Math.max(0, body.actionAmountUSDC)) // Hard cap amount to 10 USDC for safety
+      : undefined
 
     const config: AgentConfig = {
       walletAddress,
@@ -270,7 +268,7 @@ app.post('/api/agent/run', async (req: Request, res: Response) => {
       queryString: body.queryString,
       protocols: Array.isArray(body.protocols) ? body.protocols : undefined,
       policyProfileId: body.policyProfileId,
-      actionAmountUSDC: typeof body.actionAmountUSDC === 'number' ? body.actionAmountUSDC : undefined,
+      actionAmountUSDC,
       actionDestination: body.actionDestination,
       dryRun: Boolean(body.dryRun),
     }

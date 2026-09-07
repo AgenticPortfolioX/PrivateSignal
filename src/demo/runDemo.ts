@@ -24,7 +24,7 @@ import { aggregateLiveGraphData } from '../graph/aggregator'
 import { scoreCrossProtocolRisk } from '../handlers/confidentialScorer'
 import { getDefaultSecretsForStyle } from '../config/policyConfig'
 import { verifyAttestation, formatAttestationForDisplay } from '../utils/verifyAttestation'
-import { getArcBalance, DEFAULT_QUERY_FEE_USDC } from '../arc/agentWallet'
+import { getArcBalance } from '../arc/agentWallet'
 import { executeScoreGatedAction, STANDARD_CANDIDATE_ACTIONS } from '../arc/gatedAction'
 import { runAgentLoop, type AgentConfig } from '../arc/agentLoop'
 
@@ -148,21 +148,20 @@ export async function runDemo(): Promise<void> {
   console.log(`  • Recommendation:      ${c.green}${s1ScoreOutput.recommendation.toUpperCase()}${c.reset}`)
   console.log(`  • DON Enclave:         ${c.magenta}${s1Attestation.donId}${c.reset}`)
   console.log(`  • Attestation Hash:    ${c.dim}${s1Attestation.shortHash}${c.reset}`)
-  console.log(`  • Enclave Status:      ${c.green}VERIFIED_ENCLAVE_EXECUTION${c.reset}`)
+  console.log(`  • Enclave Status:      ${s1Attestation.verified ? c.green + 'VERIFIED_ENCLAVE_EXECUTION' : c.yellow + 'LOCAL_PROTOTYPE_MODE (Unverified)'}${c.reset}`)
 
-  await pause('Check Arc Balance & Pay Query Fee (Native USDC)')
+  await pause('Check Arc Balance (Native USDC)')
 
   const s1Balance = await getArcBalance()
   console.log(`\n${c.bright}[STEP 1.5] Arc Testnet Agent Sponsor (Circle L1):${c.reset}`)
   console.log(`  • Agent Address:       ${c.cyan}${s1Balance.address}${c.reset}`)
   console.log(`  • Native USDC Balance: ${c.green}$${s1Balance.balanceFormatted} USDC${c.reset}`)
-  console.log(`  • Query Fee Payment:   ${c.yellow}$${DEFAULT_QUERY_FEE_USDC.toFixed(2)} native USDC${c.reset}`)
   console.log(`  • Gas Model:           Native USDC (zero ETH / zero ERC-20 overhead)`)
 
   await pause('Evaluate Policy Gate & Execute Candidate Action on Arc')
 
   const s1Action = STANDARD_CANDIDATE_ACTIONS.safe_allocation
-  const s1ActionResult = await executeScoreGatedAction(s1Action, s1ScoreOutput.score, { dryRun: true })
+  const s1ActionResult = await executeScoreGatedAction(s1Action, s1ScoreOutput, { dryRun: true })
 
   console.log(`\n${c.bright}[STEP 1.6] Policy Gate Evaluation:${c.reset}`)
   console.log(`  • Action:              ${c.cyan}${s1Action.name}${c.reset}`)
@@ -171,7 +170,7 @@ export async function runDemo(): Promise<void> {
   console.log(`  • Gate Verdict:        ${c.green}${c.bright}PERMITTED (Score ${s1ScoreOutput.score} ≥ ${s1Action.threshold})${c.reset}`)
   console.log(`  • Action Status:       ${c.green}${s1ActionResult.status}${c.reset}`)
   console.log(`  • Arc Native Transfer: ${s1Action.amountUSDC} USDC -> ${s1Action.recipient}`)
-  console.log(`  • Transaction Hash:    ${c.magenta}${s1ActionResult.transactionHash}${c.reset}`)
+  console.log(`  • Transaction Hash:    ${c.magenta}${s1ActionResult.transactionHash || '0xSIMULATED_NO_TX_IN_DRY_RUN'}${c.reset}`)
 
   await pause('Inspect Privacy Boundary (Operator View vs Enclave View)')
 
@@ -189,8 +188,7 @@ export async function runDemo(): Promise<void> {
   console.log(`| Attested Score: ${s1ScoreOutput.score}/100              | LTV Penalties:   [SEALED SECRETS]   |`)
   console.log(`| Verdict:        ${s1ScoreOutput.recommendation.toUpperCase()}                | Risk Matrix:     [SEALED SECRETS]   |`)
   console.log(`| Attestation:    ${s1Attestation.shortHash}        | Pure Math Enclave: QuickJS WASM     |`)
-  console.log(`| Arc Fee Tx:     0x3c91...           | Zero Node.js / Browser Globals      |`)
-  console.log(`| Action Tx:      ${s1ActionResult.transactionHash?.slice(0, 10)}...         | Private Strategy Sealed in Vault    |`)
+  console.log(`| Action Tx:      ${(s1ActionResult.transactionHash || 'LOCAL_DRY_RUN_PENDING').slice(0, 10)}...         | Private Strategy Sealed in Vault    |`)
   console.log(`+-------------------------------------+-------------------------------------+`)
 
   await pause('Proceed to Scenario 2: Blocked Action Demonstration')
@@ -214,9 +212,20 @@ export async function runDemo(): Promise<void> {
   const tLoopStart = Date.now()
   // Mock an overleveraged score (42/100)
   const s2SimulatedScore = 42
+  const s2ScoreOutput: any = {
+    score: s2SimulatedScore,
+    attestation: {
+      donId: 'LOCAL_PROTOTYPE_MODE',
+      signature: 'UNVERIFIED_LOCAL_EXECUTION',
+      verified: false,
+      timestamp: Math.floor(Date.now() / 1000),
+      workflowId: 'demo',
+      executionHash: '0x0',
+    }
+  }
   const s2GatedResult = await executeScoreGatedAction(
     s2CandidateAction,
-    s2SimulatedScore,
+    s2ScoreOutput,
     { dryRun: true },
   )
   const tLoop = Date.now() - tLoopStart

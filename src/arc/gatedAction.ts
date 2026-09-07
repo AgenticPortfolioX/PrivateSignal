@@ -14,6 +14,7 @@ import {
   arcTestnet,
 } from './agentWallet'
 import type { ScoreOutput } from '../types/scorer'
+import { verifyAttestation } from '../utils/verifyAttestation'
 
 export interface CandidateAction {
   id: string
@@ -64,10 +65,20 @@ export interface GatedActionResult {
  */
 export async function executeScoreGatedAction(
   action: CandidateAction,
-  scoreOrOutput: number | ScoreOutput,
+  scorePayload: ScoreOutput,
   options: { dryRun?: boolean } = {},
 ): Promise<GatedActionResult> {
-  const score = typeof scoreOrOutput === 'number' ? scoreOrOutput : scoreOrOutput.score
+  if (!scorePayload || typeof scorePayload.score !== 'number' || !scorePayload.attestation) {
+    throw new Error('GATE_ERROR: executeScoreGatedAction requires a complete ScoreOutput payload with attestation')
+  }
+
+  // Locally verify attestation (this prevents forged payloads from passing, while permitting explicitly labeled local runs)
+  const attestationSummary = verifyAttestation(scorePayload.attestation, undefined, true)
+  if (!attestationSummary.valid) {
+    throw new Error(`GATE_ERROR: Invalid attestation. Action aborted. Status: ${attestationSummary.status}`)
+  }
+
+  const score = scorePayload.score
   const threshold = action.threshold
   const now = Math.floor(Date.now() / 1000)
 

@@ -92,7 +92,6 @@ export interface QueryParams {
 export interface PolicyProfile {
   profileId: CanonicalPolicyProfileId
   name: string
-  multiplier: number
   weightAdjustment?: number[]
   thresholds?: PolicyThresholds
 }

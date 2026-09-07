@@ -1,0 +1,88 @@
+You are a senior protocol QA / security-minded test engineer.
+
+Read this plan fully before beginning. This is testing2 — an upgraded successor to testing1.
+
+==================================================
+WHAT TESTING1 COVERED (do not re-run these wholesale)
+==================================================
+
+testing1 established the baseline test plan and identified 15 audit items (TA-01 through TA-15).
+The existing 83-test suite covers:
+- confidentialScorer math + privacy boundary
+- Graph aggregator fail-closed on partial outage
+- NL router prompt parsing + protocol extraction
+- attestation verification (forged, old, local mode)
+- rate limiter (per-IP, X-Forwarded-For bypass)
+- Arc balance check + gated allow/deny paths (dry-run)
+- Phase 7 end-to-end scenario (healthy wallet allow, risky wallet deny)
+- API server /score, /agent/run, /agent/status, /history
+- SQLite persistence audit trail
+- Feature extraction (concentration, health pressure, correlated assets)
+
+==================================================
+GAPS IDENTIFIED IN testing1 (test2 must close these)
+==================================================
+
+1. POLICY PROFILE STRICTNESS [TA-07, newly fixed]
+   - Conservative (safe>=75), Balanced (safe>=65), Aggressive (safe>=55) now enforce
+     DIFFERENT raw score cutoffs after the multiplier was removed.
+   - testing1 had a test asserting they were ~equal (~65). That test was DELETED.
+   - testing2 MUST verify all three profiles produce DISTINCT score thresholds.
+
+2. SCORE DETERMINISM ACROSS PROFILES
+   - Same graph input should produce same raw score under different profile weight adjustments only if weights differ.
+
+3. DB PRIVACY AUDIT
+   - SQLite stores walletAddress, score, recommendation, protocols, donId.
+   - No test checks that modelWeights, thresholds are NOT stored.
+
+4. API RESPONSE SHAPE
+   - featuresSummary is exposed in /api/score (allowed). No test checks exact allowed vs. disallowed fields.
+
+5. GATE WITH NULL ATTESTATION
+   - executeScoreGatedAction with attestation: null should throw GATE_ERROR.
+
+6. NL -> PROFILE -> SCORER INTEGRATION
+   - "conservative" keyword in NL prompt routes policyProfileId correctly into scorer.
+
+7. GRAPH SCHEMA NORMALIZATION EDGE CASES
+   - null account response, zero positions, partial position data.
+
+8. ZERO-DEBT WALLET SCORING
+   - Large collateral + zero debt: should score >= 90.
+
+9. ZERO-POSITION VERIFIED WALLET
+   - dataComplete: true, empty positions: should score deterministically.
+
+10. AGENT LOOP FAIL-CLOSED ON GRAPH OUTAGE
+    - Mock fetch throws network error -> agent loop propagates GRAPH_DATA_UNAVAILABLE.
+
+11. ATTESTATION STATUS FIELD ACCURACY
+    - LOCAL_PROTOTYPE_MODE -> status != VERIFIED_ENCLAVE_EXECUTION.
+    - Forged 0xattest_ -> status = INVALID_ATTESTATION.
+
+12. RATE LIMITER BODY SHAPE
+    - 429 response body has { error: RATE_LIMIT_EXCEEDED, message: string }.
+
+13. GATE BOUNDARY VALUES
+    - score == threshold -> passed = true.
+    - score == threshold - 1 -> passed = false.
+
+14. CRE WORKFLOW YAML ACCURACY
+    - workflow.yaml contains workflowId "006da2b7" prefix and handlerInTee: true.
+
+15. FEATURESSUMMARY EXPOSURE BOUNDARY (HTTP)
+    - /api/score response does NOT include modelWeights, thresholds, policyProfiles, ltvScore.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+1. Write all new tests in: tests/testing2.test.ts
+2. Use bun:test only (describe, it, expect).
+3. Do not use real network calls (mock fetch where needed).
+4. For DB tests, use the in-memory SQLite.
+5. For HTTP tests, spin up express on ephemeral port.
+6. Each test maps to a gap letter above.
+7. After writing tests, run them and capture results.
+8. Write the full audit report to: audit/TestAudit2-Results-2026-09-07.md

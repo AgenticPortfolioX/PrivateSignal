@@ -34,11 +34,7 @@ export const arcTestnet = defineChain({
   },
 })
 
-// Default oracle fee recipient address (simulated treasury / DON gateway)
-export const DEFAULT_ORACLE_FEE_RECIPIENT =
-  process.env.ARC_ORACLE_FEE_RECIPIENT || '0x748ABdeF0775132E8F941e1513152D5eb02D3a4B'
 
-export const DEFAULT_QUERY_FEE_USDC = parseFloat(process.env.ARC_FEE_AMOUNT_USDC || '0.10')
 
 export function parseUsdcAmount(amount: number | string): bigint {
   return parseEther(amount.toString())
@@ -46,17 +42,6 @@ export function parseUsdcAmount(amount: number | string): bigint {
 
 export function formatUsdcAmount(amountWei: bigint): string {
   return formatEther(amountWei)
-}
-
-export interface PaymentReceipt {
-  txHash: Hash
-  amountUSDC: number
-  payer: string
-  recipient: string
-  blockNumber: string
-  gasUsed: string
-  status: 'SUCCESS' | 'REVERTED'
-  timestamp: number
 }
 
 export interface ArcBalanceInfo {
@@ -137,59 +122,3 @@ export async function getArcBalance(targetAddress?: string): Promise<ArcBalanceI
   }
 }
 
-/**
- * Sends native USDC payment on Arc testnet for a confidential risk score
- */
-export async function payForScore(
-  amountUSDC: number = DEFAULT_QUERY_FEE_USDC,
-  recipientAddress: string = DEFAULT_ORACLE_FEE_RECIPIENT,
-): Promise<PaymentReceipt> {
-  const publicClient = getArcPublicClient()
-  const walletClient = getArcWalletClient()
-  const account = getAgentAccount()
-
-  // 1. Balance verification
-  const { balanceUSDC } = await getArcBalance(account.address)
-  if (balanceUSDC < amountUSDC) {
-    throw new Error(
-      `INSUFFICIENT_ARC_USDC: Agent balance (${balanceUSDC} USDC) is insufficient for query fee (${amountUSDC} USDC)`,
-    )
-  }
-
-  // 2. Convert fee to native 18-decimal wei
-  // On Arc, 1.00 USDC = 10^18 native units
-  const valueWei = parseEther(amountUSDC.toString())
-
-  // 3. Estimate gas
-  const gasEstimate = await publicClient.estimateGas({
-    account,
-    to: recipientAddress as `0x${string}`,
-    value: valueWei,
-  }).catch(() => 21000n)
-
-  // 4. Send native transaction (Zero ERC-20 approve/transfer calls)
-  const txHash = await walletClient.sendTransaction({
-    chain: arcTestnet,
-    account,
-    to: recipientAddress as `0x${string}`,
-    value: valueWei,
-    gas: (gasEstimate * 120n) / 100n, // 20% buffer
-  })
-
-  // 5. Wait for on-chain receipt
-  const receipt: TransactionReceipt = await publicClient.waitForTransactionReceipt({
-    hash: txHash,
-    confirmations: 1,
-  })
-
-  return {
-    txHash,
-    amountUSDC,
-    payer: account.address,
-    recipient: recipientAddress,
-    blockNumber: receipt.blockNumber.toString(),
-    gasUsed: receipt.gasUsed.toString(),
-    status: receipt.status === 'success' ? 'SUCCESS' : 'REVERTED',
-    timestamp: Math.floor(Date.now() / 1000),
-  }
-}

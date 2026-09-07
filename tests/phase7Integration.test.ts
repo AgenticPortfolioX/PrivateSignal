@@ -80,7 +80,7 @@ describe('PrivateSignal — Phase 7: End-to-End Integration & System Validation'
 
       const agentResult = await runAgentLoop(agentConfig)
       expect(agentResult.success).toBe(true)
-      expect(agentResult.steps.length).toBe(5)
+      expect(agentResult.steps.length).toBe(4)
       expect(agentResult.attestationSummary.verified).toBe(false)
     })
   })
