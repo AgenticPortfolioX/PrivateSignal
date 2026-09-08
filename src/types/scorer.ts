@@ -144,6 +144,7 @@ export interface AttestationEnvelope {
 }
 
 export interface ScoreOutput {
+  walletAddress: string
   score: number
   recommendation: 'safe' | 'caution' | 'high_risk'
   reasonCodes: string[]

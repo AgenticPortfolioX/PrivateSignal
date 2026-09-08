@@ -77,15 +77,28 @@ export function verifyAttestation(
   }
 
   // Validate expected execution hash if provided
-  let hashMatches = true
   if (expectedExecutionHash && executionHash !== expectedExecutionHash) {
-    hashMatches = false
+    return {
+      valid: false,
+      donId: donId || 'UNKNOWN',
+      timestamp: timestamp || 0,
+      workflowId: workflowId || 'UNKNOWN',
+      executionHash: executionHash || '0x0',
+      signatureSnippet: signature ? signature.slice(0, 16) : 'MALFORMED',
+      verified: false,
+      status: 'INVALID_ATTESTATION',
+      formattedTimestamp: timestamp ? new Date(timestamp * 1000).toISOString() : 'N/A',
+      shortHash: executionHash ? `${executionHash.slice(0, 10)}...${executionHash.slice(-8)}` : '0x0',
+      donZone: donId?.includes('production') ? 'Production Enclave' : 'Staging Enclave',
+    }
   }
 
-  // Validate signature format (0xattest_ prefix or 0x hex 64+ chars)
-  const isValidSignatureFormat =
-    signature.startsWith('0xattest_') ||
-    (signature.startsWith('0x') && signature.length >= 66)
+  // Validate signature format
+  // If production, enforce a real ECDSA hex signature (0x + at least 130 hex chars)
+  // Otherwise, allow the simulation string (0xattest_)
+  const isValidSignatureFormat = process.env.CRE_DON_ID === 'don-zone-a-production' 
+    ? /^0x[a-fA-F0-9]{130,}$/.test(signature)
+    : (signature.startsWith('0xattest_') || (signature.startsWith('0x') && signature.length >= 66))
 
   const isLocalPrototype = signature === 'UNVERIFIED_LOCAL_EXECUTION' && donId === 'LOCAL_PROTOTYPE_MODE'
 
@@ -93,21 +106,25 @@ export function verifyAttestation(
   const MAX_AGE_SECONDS = 300
   const currentTimestamp = Math.floor(Date.now() / 1000)
   const age = Math.abs(currentTimestamp - timestamp)
-  const isFresh = age <= MAX_AGE_SECONDS || process.env.NODE_ENV === 'test' || donId === 'LOCAL_PROTOTYPE_MODE'
+  const isFresh = age <= MAX_AGE_SECONDS
 
   let isValid = false
   if (!isFresh) {
     isValid = false // Reject stale/replayed envelopes
-  } else if (isLocalPrototype && allowUnverifiedLocal && process.env.CRE_DON_ID !== 'don-zone-a-production') {
+  } else if (isLocalPrototype && allowUnverifiedLocal) {
     isValid = true // Allowed for demo purposes, but distinctly marked
-  } else if (isLocalPrototype && process.env.CRE_DON_ID === 'don-zone-a-production') {
-    isValid = false // Strictly reject self-authored envelopes in production
+  } else if (isLocalPrototype && !allowUnverifiedLocal) {
+    isValid = false // Strictly reject self-authored envelopes when unverified local is not allowed
   } else {
     // We cannot cryptographically verify a real DON signature here without SDK integration.
     // However, if it's production, and the simulator printed "score": "...", we trust the simulation wrapper.
     // Real implementation would verify the ECDSA signature here.
     if (process.env.CRE_DON_ID === 'don-zone-a-production') {
-       isValid = true // We are running inside the secure Simulator wrapper
+       if (isValidSignatureFormat) {
+         isValid = true // Cryptographic signature format is valid
+       } else {
+         isValid = false
+       }
     } else {
        isValid = false 
     }

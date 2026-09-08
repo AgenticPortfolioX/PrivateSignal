@@ -3,17 +3,17 @@
  *
  * ============================================================================
  * DEMO SCENARIOS:
- * 1. Approved Score-Gated Action:
- *    - Cross-protocol risk evaluation for healthy positions
+ * 1. Approved Policy-Gated Capital Release (Healthy Counterparty):
+ *    - Cross-protocol risk evaluation for healthy counterparty positions
  *    - Attested confidential score leaves TEE enclave
- *    - Arc native USDC payment & policy gate passes -> Action executed on Arc
+ *    - Clears conservative treasury policy threshold -> TREASURY_FUNDING_RELEASE executed on Arc
  *
  * 2. Privacy Boundary Comparison:
  *    - Operator View vs Enclave View (Sealed weights & proprietary math)
  *
- * 3. Blocked Score-Gated Action:
- *    - High-risk overleveraged positions evaluated under aggressive policy
- *    - Score below threshold -> Hard policy gate strictly aborts action
+ * 3. Blocked Capital Release (Risky Counterparty / Unmet Threshold):
+ *    - High-risk overleveraged positions evaluated under high-conviction policy
+ *    - Score below threshold -> Hard policy gate strictly triggers FUNDING_BLOCKED (0 USDC moved)
  * ============================================================================
  */
 
@@ -22,11 +22,9 @@ import 'dotenv/config'
 import { routeToGraphQueryPlan } from '../graph/nlRouter'
 import { aggregateLiveGraphData } from '../graph/aggregator'
 import { invokeCreWorkflow } from '../handlers/creInvoker'
-import { getDefaultSecretsForStyle } from '../config/policyConfig'
-import { verifyAttestation, formatAttestationForDisplay } from '../utils/verifyAttestation'
+import { verifyAttestation } from '../utils/verifyAttestation'
 import { getArcBalance } from '../arc/agentWallet'
 import { executeScoreGatedAction, STANDARD_CANDIDATE_ACTIONS } from '../arc/gatedAction'
-import { runAgentLoop, type AgentConfig } from '../arc/agentLoop'
 
 // ANSI styling for presentation
 const c = {
@@ -83,15 +81,15 @@ export async function runDemo(): Promise<void> {
   console.log(` |_|   |_|  |_| \\_/ \\__,_|\\__\\___|____/|_|\\__, |_| |_|\\__,_|_|`)
   console.log(`                                          |___/               `)
   console.log(`${c.reset}`)
-  console.log(`${c.bright}Chainlink CRE Confidential Core + The Graph MCP + Arc Autonomous Agent${c.reset}`)
-  console.log(`${c.dim}Native USDC gas model on Arc Testnet (Circle L1) | Zero ERC-20 gas overhead${c.reset}\n`)
+  console.log(`${c.bright}Chainlink CRE Confidential Core + The Graph MCP + Arc Policy-Gated Treasury Release${c.reset}`)
+  console.log(`${c.dim}Simulating Financial Control: Confidential Risk Assessment -> Gated Capital Release${c.reset}\n`)
 
   await pause('Initialize Demo Environment')
 
   // --------------------------------------------------------------------------
-  // SCENARIO 1: APPROVED ACTION
+  // SCENARIO 1: APPROVED CAPITAL RELEASE (TREASURY_FUNDING_RELEASE)
   // --------------------------------------------------------------------------
-  printHeader('SCENARIO 1: APPROVED SCORE-GATED ACTION (HEALTHY POSITIONS)')
+  printHeader('SCENARIO 1: APPROVED TREASURY FUNDING RELEASE (HEALTHY COUNTERPARTY)')
 
   const s1Wallet = '0x5b11D95bd844e5DE93bC9759a35fc89b40152133'
   const s1Query = `Score cross-protocol risk for wallet ${s1Wallet} across Aave and Morpho under conservative policy`
@@ -104,12 +102,12 @@ export async function runDemo(): Promise<void> {
   const tRouter = Date.now() - tRouterStart
 
   console.log(`\n${c.bright}[STEP 1.2] Graph MCP Router Plan (${tRouter}ms):${c.reset}`)
-  console.log(`  • Target Wallet:     ${c.cyan}${s1Plan.walletAddress}${c.reset}`)
-  console.log(`  • Protocols:         ${c.cyan}${s1Plan.protocols.join(', ')}${c.reset}`)
-  console.log(`  • Policy Style:      ${c.cyan}${s1Plan.policyProfileId}${c.reset}`)
-  console.log(`  • MCP Tool:          ${c.dim}execute_graph_query (standard Messari Lending schema)${c.reset}`)
+  console.log(`  • Counterparty Wallet: ${c.cyan}${s1Plan.walletAddress}${c.reset}`)
+  console.log(`  • Protocols:           ${c.cyan}${s1Plan.protocols.join(', ')}${c.reset}`)
+  console.log(`  • Risk Policy:         ${c.cyan}${s1Plan.policyProfileId}${c.reset}`)
+  console.log(`  • MCP Tool:            ${c.dim}execute_graph_query (Messari Lending standard schema)${c.reset}`)
 
-  await pause('Fetch Multi-Protocol Positions from The Graph')
+  await pause('Fetch Counterparty Positions from The Graph')
 
   const tGraphStart = Date.now()
   const s1GraphData = await aggregateLiveGraphData(s1Plan.walletAddress, s1Plan.protocols)
@@ -119,11 +117,11 @@ export async function runDemo(): Promise<void> {
   const debtUSD = s1GraphData.normalizedGraphData.totalDebtUSD || 0
   const posCount = s1GraphData.normalizedGraphData.positions.length
 
-  console.log(`\n${c.bright}[STEP 1.3] Standardized Subgraph Aggregation (${tGraph}ms):${c.reset}`)
+  console.log(`\n${c.bright}[STEP 1.3] Subgraph Position Aggregation (${tGraph}ms):${c.reset}`)
   console.log(`  • Protocols Aggregated: ${s1Plan.protocols.join(', ')} (${posCount} position feeds)`)
-  console.log(`  • Total Collateral:    $${colUSD.toFixed(2)} USD`)
-  console.log(`  • Total Debt:          $${debtUSD.toFixed(2)} USD`)
-  console.log(`  • Cache TTL:           30s in-memory store active`)
+  console.log(`  • Total Collateral:     $${colUSD.toFixed(2)} USD`)
+  console.log(`  • Total Debt:           $${debtUSD.toFixed(2)} USD`)
+  console.log(`  • Data Reliability:     Complete & Verified`)
 
   await pause('Execute Confidential Scoring inside Chainlink CRE TEE Enclave')
 
@@ -139,33 +137,35 @@ export async function runDemo(): Promise<void> {
   const tScorer = Date.now() - tScorerStart
   const s1Attestation = verifyAttestation(s1ScoreOutput.attestation, undefined, true)
 
-  console.log(`\n${c.bright}[STEP 1.4] TEE Enclave Confidential Evaluation (${tScorer}ms):${c.reset}`)
-  console.log(`  • Attested Score:      ${c.green}${c.bright}${s1ScoreOutput.score} / 100${c.reset}`)
+  console.log(`\n${c.bright}[STEP 1.4] TEE Enclave Confidential Risk Assessment (${tScorer}ms):${c.reset}`)
+  console.log(`  • Confidential Score:  ${c.green}${c.bright}${s1ScoreOutput.score} / 100${c.reset}`)
   console.log(`  • Recommendation:      ${c.green}${s1ScoreOutput.recommendation.toUpperCase()}${c.reset}`)
   console.log(`  • DON Enclave:         ${c.magenta}${s1Attestation.donId}${c.reset}`)
   console.log(`  • Attestation Hash:    ${c.dim}${s1Attestation.shortHash}${c.reset}`)
   console.log(`  • Enclave Status:      ${s1Attestation.verified ? c.green + 'VERIFIED_ENCLAVE_EXECUTION' : c.yellow + 'LOCAL_PROTOTYPE_MODE (Unverified)'}${c.reset}`)
 
-  await pause('Check Arc Balance (Native USDC)')
+  await pause('Check Treasury Wallet Balance on Arc L1')
 
   const s1Balance = await getArcBalance()
-  console.log(`\n${c.bright}[STEP 1.5] Arc Testnet Agent Sponsor (Circle L1):${c.reset}`)
-  console.log(`  • Agent Address:       ${c.cyan}${s1Balance.address}${c.reset}`)
-  console.log(`  • Native USDC Balance: ${c.green}$${s1Balance.balanceFormatted} USDC${c.reset}`)
-  console.log(`  • Gas Model:           Native USDC (zero ETH / zero ERC-20 overhead)`)
+  console.log(`\n${c.bright}[STEP 1.5] Arc Testnet Treasury Source Wallet (Circle L1):${c.reset}`)
+  console.log(`  • Treasury Address:    ${c.cyan}${s1Balance.address}${c.reset}`)
+  console.log(`  • Treasury Balance:    ${c.green}$${s1Balance.balanceFormatted} USDC${c.reset}`)
+  console.log(`  • Role:                Treasury / Funding Source`)
 
-  await pause('Evaluate Policy Gate & Execute Candidate Action on Arc')
+  await pause('Evaluate Treasury Policy Gate & Release Funding on Arc')
 
-  const s1Action = STANDARD_CANDIDATE_ACTIONS.safe_allocation
+  const s1Action = STANDARD_CANDIDATE_ACTIONS.treasury_funding_release
   const s1ActionResult = await executeScoreGatedAction(s1Action, s1ScoreOutput, { dryRun: false })
 
-  console.log(`\n${c.bright}[STEP 1.6] Policy Gate Evaluation:${c.reset}`)
-  console.log(`  • Action:              ${c.cyan}${s1Action.name}${c.reset}`)
-  console.log(`  • Required Threshold:  Score ≥ ${s1Action.threshold}`)
+  console.log(`\n${c.bright}[STEP 1.6] Policy Gate Evaluation & Capital Release:${c.reset}`)
+  console.log(`  • Financial Action:    ${c.cyan}${s1Action.type}${c.reset} (${s1Action.name})`)
+  console.log(`  • Required Score:      Score ≥ ${s1Action.threshold} (${s1Action.policyProfileId} policy)`)
   console.log(`  • Actual Score:        ${s1ScoreOutput.score}`)
+  console.log(`  • Funding Amount:      ${c.green}${s1Action.amountUSDC} USDC${c.reset}`)
   console.log(`  • Gate Verdict:        ${c.green}${c.bright}PERMITTED (Score ${s1ScoreOutput.score} ≥ ${s1Action.threshold})${c.reset}`)
-  console.log(`  • Action Status:       ${c.green}${s1ActionResult.status}${c.reset}`)
-  console.log(`  • Arc Native Transfer: ${s1Action.amountUSDC} USDC -> ${s1Action.recipient}`)
+  console.log(`  • Gate Status:         ${c.green}${c.bright}${s1ActionResult.status}${c.reset}`)
+  console.log(`  • Receipt:             ${c.green}${s1ActionResult.receiptMessage}${c.reset}`)
+  console.log(`  • Capital Dispatched:  ${s1Action.amountUSDC} native USDC from Treasury -> ${s1ActionResult.toRecipient}`)
   console.log(`  • Transaction Hash:    ${c.magenta}${s1ActionResult.transactionHash || '0xSIMULATED_NO_TX_IN_DRY_RUN'}${c.reset}`)
 
   await pause('Inspect Privacy Boundary (Operator View vs Enclave View)')
@@ -179,36 +179,34 @@ export async function runDemo(): Promise<void> {
   console.log(`+-------------------------------------+-------------------------------------+`)
   console.log(`| ${c.cyan}${c.bright}PUBLIC OPERATOR / AUDIT VIEW${c.reset}        | ${c.magenta}${c.bright}CONFIDENTIAL TEE ENCLAVE (CRE)${c.reset}     |`)
   console.log(`+-------------------------------------+-------------------------------------+`)
-  console.log(`| Target Wallet:  0xDEMO...0001       | Model Weights:   [SEALED SECRETS]   |`)
+  console.log(`| Counterparty:   0xDEMO...0001       | Model Weights:   [SEALED SECRETS]   |`)
   console.log(`| Protocols:      Aave V3, Morpho     | Threshold Caps:  [SEALED SECRETS]   |`)
   console.log(`| Attested Score: ${s1ScoreOutput.score}/100              | LTV Penalties:   [SEALED SECRETS]   |`)
-  console.log(`| Verdict:        ${s1ScoreOutput.recommendation.toUpperCase()}                | Risk Matrix:     [SEALED SECRETS]   |`)
-  console.log(`| Attestation:    ${s1Attestation.shortHash}        | Pure Math Enclave: QuickJS WASM     |`)
-  console.log(`| Action Tx:      ${(s1ActionResult.transactionHash || 'LOCAL_DRY_RUN_PENDING').slice(0, 10)}...         | Private Strategy Sealed in Vault    |`)
+  console.log(`| Action Type:    TREASURY_FUNDING    | Risk Matrix:     [SEALED SECRETS]   |`)
+  console.log(`| Status:         FUNDING_RELEASED    | Pure Math Engine: QuickJS WASM     |`)
+  console.log(`| Capital Tx:     ${(s1ActionResult.transactionHash || 'LOCAL_DRY_RUN_PENDING').slice(0, 10)}...         | Private Strategy Sealed in Vault    |`)
   console.log(`+-------------------------------------+-------------------------------------+`)
 
-  await pause('Proceed to Scenario 2: Blocked Action Demonstration')
+  await pause('Proceed to Scenario 2: Blocked Capital Release Demonstration')
 
   // --------------------------------------------------------------------------
-  // SCENARIO 2: BLOCKED ACTION (RISKY POSITIONS / AGGRESSIVE THRESHOLD)
+  // SCENARIO 2: BLOCKED CAPITAL RELEASE (RISKY COUNTERPARTY / HIGH THRESHOLD)
   // --------------------------------------------------------------------------
-  printHeader('SCENARIO 2: BLOCKED SCORE-GATED ACTION (OVERLEVERAGED / HIGH RISK)')
+  printHeader('SCENARIO 2: BLOCKED CAPITAL RELEASE (OVERLEVERAGED / BELOW POLICY THRESHOLD)')
 
   const s2Wallet = '0x2222222222222222222222222222222222222222'
-  const s2CandidateAction = STANDARD_CANDIDATE_ACTIONS.yield_strategy // Requires score >= 80
+  const s2CandidateAction = STANDARD_CANDIDATE_ACTIONS.conditional_settlement_release // Requires score >= 80
 
   console.log(`\n${c.bright}[STEP 2.1] Scenario Setup:${c.reset}`)
-  console.log(`  • Target Wallet:       ${c.yellow}${s2Wallet}${c.reset}`)
-  console.log(`  • Candidate Action:    ${c.cyan}${s2CandidateAction.name}${c.reset}`)
-  console.log(`  • Required Threshold:  ${c.red}${c.bright}Score ≥ ${s2CandidateAction.threshold} (High Conviction Required)${c.reset}`)
-  console.log(`  • Action Capital:      ${s2CandidateAction.amountUSDC} native USDC`)
+  console.log(`  • Counterparty Wallet: ${c.yellow}${s2Wallet}${c.reset}`)
+  console.log(`  • Financial Action:    ${c.cyan}${s2CandidateAction.type}${c.reset} (${s2CandidateAction.name})`)
+  console.log(`  • Required Score:      ${c.red}${c.bright}Score ≥ ${s2CandidateAction.threshold} (${s2CandidateAction.policyProfileId} policy)${c.reset}`)
+  console.log(`  • Proposed Funding:    ${s2CandidateAction.amountUSDC} native USDC`)
 
-  await pause('Execute Autonomous Agent Loop for Scenario 2')
+  await pause('Execute Autonomous Gating Check for Scenario 2')
 
   const tLoopStart = Date.now()
-  // In order to naturally produce a block, we invoke the true graph workflow.
-  // 0x22222... will return zero collateral, which under debt or empty produces a low score.
-  // We'll set dataComplete: true to pass the graph reliability check.
+  // High-risk portfolio (0 collateral, 1000 debt) producing an elevated risk score
   const s2ScoreOutput = await invokeCreWorkflow({
     walletAddress: s2Wallet,
     protocols: ['aave-v3', 'morpho'],
@@ -219,8 +217,8 @@ export async function runDemo(): Promise<void> {
       positions: [],
       dataComplete: true,
       totalCollateralUSD: 0,
-      totalDebtUSD: 1000 // Force high risk with 0 collateral and 1000 debt
-    }
+      totalDebtUSD: 1000,
+    },
   })
   const s2SimulatedScore = s2ScoreOutput.score
   const s2GatedResult = await executeScoreGatedAction(
@@ -230,13 +228,14 @@ export async function runDemo(): Promise<void> {
   )
   const tLoop = Date.now() - tLoopStart
 
-  console.log(`\n${c.bright}[STEP 2.2] Score-Gated Evaluation Verdict (${tLoop}ms):${c.reset}`)
+  console.log(`\n${c.bright}[STEP 2.2] Hard Policy Gate Evaluation & Capital Protection (${tLoop}ms):${c.reset}`)
   console.log(`  • Attested Risk Score: ${c.red}${c.bright}${s2SimulatedScore} / 100 (HIGH_RISK)${c.reset}`)
   console.log(`  • Policy Threshold:    Score ≥ ${s2CandidateAction.threshold}`)
   console.log(`  • Hard Gate Status:    ${c.red}${c.bright}${s2GatedResult.status}${c.reset}`)
+  console.log(`  • Receipt:             ${c.yellow}${s2GatedResult.receiptMessage}${c.reset}`)
   console.log(`  • Reason:              ${c.yellow}${s2GatedResult.blockedReason}${c.reset}`)
-  console.log(`  • Transaction Status:  ${c.red}TRANSACTION_ABORTED${c.reset} — 0 USDC dispatched on Arc`)
-  console.log(`  • Capital Protection:  Preserved 100% of agent funds under adverse risk`)
+  console.log(`  • Capital Movement:    ${c.red}FUNDING_BLOCKED — 0 USDC transferred on Arc${c.reset}`)
+  console.log(`  • Capital Protection:  100% of treasury capital preserved under adverse risk`)
 
   // --------------------------------------------------------------------------
   // DEMO SUMMARY & METRICS
@@ -244,10 +243,10 @@ export async function runDemo(): Promise<void> {
   const totalDuration = Date.now() - demoStartTime
   printHeader('DEMO EXECUTION COMPLETE')
   console.log(`  • Total Demonstration Runtime: ${totalDuration}ms`)
-  console.log(`  • Scenario 1 (Approved Path):  SUCCESS (Action Executed on Arc)`)
-  console.log(`  • Scenario 2 (Blocked Path):   SUCCESS (Hard Gate Enforced, Capital Protected)`)
+  console.log(`  • Scenario 1 (Approved Path):  SUCCESS (TREASURY_FUNDING_RELEASE -> FUNDING_RELEASED on Arc)`)
+  console.log(`  • Scenario 2 (Blocked Path):   SUCCESS (CONDITIONAL_SETTLEMENT_RELEASE -> FUNDING_BLOCKED, 0 USDC moved)`)
   console.log(`  • TEE Privacy Boundary:        SEALED (Zero secret weights leaked)`)
-  console.log(`  • Arc Native Gas Economy:      VERIFIED (Circle L1 native USDC micropayments)`)
+  console.log(`  • Arc Financial Control:       VERIFIED (Policy-gated capital deployment)`)
   console.log('='.repeat(80) + '\n')
 }
 

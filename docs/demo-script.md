@@ -68,35 +68,34 @@
 
 ---
 
-### Scene 6: Arc Agent Autonomous Payment & Execution (Native USDC) [2:45 - 3:30] (45 seconds)
-- **Visual:** Terminal running `bun run demo` executing the autonomous Arc Agent Loop. Highlighting the 0.1 USDC query fee payment followed by policy evaluation and capital deployment.
+### Scene 6: Arc Policy-Gated Treasury Capital Release (Native USDC) [2:45 - 3:30] (45 seconds)
+- **Visual:** Terminal running `bun run demo` executing the policy-gated Arc Treasury Gating flow. Highlighting the confidential risk evaluation followed by conditional capital release.
 - **Screen Capture:** 
-  - Terminal logs showing `[AGENT_STEP] PAY_USDC_FEE` with native gas transaction.
-  - Arc Testnet Explorer (`explorer.testnet.arc.circle.com`) showing transaction details.
+  - Terminal logs showing `[STEP 1.5]` checking Treasury USDC balance on Arc L1.
+  - Policy gate permitting `TREASURY_FUNDING_RELEASE` and dispatching 0.20 USDC from Treasury to recipient counterparty.
+  - Arc Testnet Explorer showing native USDC capital release transaction.
 - **Audio / Narration:**
-  > "Now watch the autonomous agent loop in action on Circle's Arc Layer 1.  
+  > "Now watch policy-gated capital release in action on Circle's Arc Layer 1.  
   >  
-  > A crucial technical highlight: on Arc, USDC is the native gas currency with 18 decimals—not an ERC-20 token. There are zero ERC-20 `approve` or `transferFrom` transactions. Our agent interacts directly via native value transfers using standard `msg.value` mechanics.  
+  > Rather than an arbitrary token send or query fee, this simulates an institutional financial control function: treasury funding release. A lender or treasury releases capital to a counterparty only when PrivateSignal's confidential risk score satisfies the policy threshold.  
   >  
-  > "In Step 1, the agent checks its native USDC balance and states the required 0.1 native USDC fee on Arc (fee payment is optional/simulated in this local demo loop).  
+  > On Arc, USDC is the native gas currency with 18 decimals—zero ERC-20 approve or transferFrom overhead.  
   >  
-  > In Step 2, upon receiving the local score of 82, the agent evaluates its risk policy: because 82 exceeds the required 65 threshold, the policy gate triggers an **ALLOW**.  
-  >  
-  > In Step 3, the agent autonomously executes a 0.2 native USDC capital allocation transaction to the target protocol vault on Arc."
+  > In Scenario 1, the counterparty clears our conservative risk policy (score 100 ≥ 65). The policy gate grants an **ALLOW** verdict, and the Treasury autonomously executes a 0.20 native USDC capital release to the recipient wallet."
 
 ---
 
-### Scene 7: Blocked Action Scenario (Aggressive Risk Gating) [3:30 - 4:00] (30 seconds)
-- **Visual:** Terminal and UI demonstrating a stressed wallet scenario (`0x2222...` with 92% LTV and low health factor). Policy gate rejecting the proposed capital deployment.
+### Scene 7: Blocked Capital Release Scenario (Overleveraged / High Risk Counterparty) [3:30 - 4:00] (30 seconds)
+- **Visual:** Terminal and UI demonstrating a high-risk counterparty scenario evaluated under high-conviction policy. Policy gate triggering `FUNDING_BLOCKED`.
 - **Screen Capture:** 
-  - Terminal log showing `[POLICY_GATE_REJECTED] BLOCKED_BY_RISK_POLICY: Evaluated score (28) is below required policy threshold (70)`.
-  - Red security banner appearing in the UI.
+  - Terminal log showing `[POLICY_GATE_REJECTED] FUNDING_BLOCKED: Confidential score (55) is below required treasury risk threshold (80) for Conditional Settlement Release`.
+  - Confirmation that 0 USDC moved on Arc, protecting 100% of treasury funds.
 - **Audio / Narration:**
-  > "What happens when market conditions deteriorate or an agent interacts with an overleveraged borrower? Let's test a stressed portfolio with 92% LTV and concentrated liquid staking exposure.  
+  > "What happens when an agent interacts with an overleveraged borrower or high-risk counterparty? Let's test a stressed counterparty portfolio evaluated under an aggressive policy.  
   >  
-  > The confidential scorer detects the health pressure index and flags staking derivative depegging risk, issuing a score of 28 with recommendation `HIGH_RISK`.  
+  > The confidential scorer detects severe health pressure, issuing a score below the required threshold of 80.  
   >  
-  > The agent's policy threshold requires at least 70 for capital deployment. The policy gate instantly intercepts and aborts the transfer: no capital is deployed, protecting the agent's treasury from insolvency. The audit trail logs the exact rejection reason while preserving complete computational privacy."
+  > The policy gate immediately triggers **FUNDING_BLOCKED**: zero USDC is moved, protecting treasury capital from counterparty default. The audit receipt logs the exact reason while preserving complete model privacy."
 
 ---
 

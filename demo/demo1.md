@@ -1,0 +1,205 @@
+# PrivateSignal Demo 1 — Policy-Gated Treasury Capital Release
+## Complete Demonstration Playbook & Command Reference
+
+---
+
+### Executive Summary
+
+PrivateSignal transforms autonomous AI agent interactions on Circle's Arc L1 into an institutional-grade financial control system. Instead of generic token transfers, tips, or oracle queries, PrivateSignal enforces **Policy-Gated Capital Release**:
+
+> **Core Financial Control Principle:**  
+> A treasury, lender, or settlement vault releases capital (native USDC on Arc) to a counterparty **ONLY IF** PrivateSignal's confidential risk score clears the strict policy threshold inside a Chainlink CRE TEE enclave.
+> - **High Score / Healthy Portfolio** $\to$ **`FUNDING_RELEASED`** (USDC dispatched to recipient)
+> - **Low Score / Stressed Portfolio / Missing Data** $\to$ **`FUNDING_BLOCKED`** (0 USDC moved, treasury capital protected)
+
+---
+
+### Key Roles & Architecture
+
+| Role | Entity / Address | Function |
+| :--- | :--- | :--- |
+| **Funding Source (Treasury / Lender)** | `0x748ABdeF0775132E8F941e1513152D5eb02D3a4B` | Holds native USDC on Arc Testnet; sponsors and releases funding |
+| **Evaluated Counterparty (Recipient)** | `0x5b11D95bd844e5DE93bC9759a35fc89b40152133` (Healthy)<br>`0x2222222222222222222222222222222222222222` (High Risk) | Borrower / trader portfolio scored across multi-protocol positions |
+| **Position Aggregator** | The Graph MCP Integration | Aggregates positions across Aave V3, Morpho, etc. into standard schemas |
+| **Confidential Core Evaluator** | Chainlink CRE TEE Enclave | Executes pure QuickJS WASM scoring with sealed proprietary weights |
+| **Autonomous Policy Gate** | PrivateSignal Arc Gate Engine | Enforces hard threshold check before executing on-chain native USDC dispatch |
+
+---
+
+### Policy-Bound Capital Tiers
+
+Funding amounts and score thresholds are strictly tied to risk policy profiles:
+
+| Policy Profile | Action Type | Required Score | Funding Amount | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `conservative` | `TREASURY_FUNDING_RELEASE` | $\ge 65$ | **0.20 USDC** | Conservative treasury capital release to verified counterparty |
+| `balanced` | `CREDIT_LINE_DRAW` | $\ge 65$ | **0.50 USDC** | Credit line draw authorized under balanced risk policy |
+| `aggressive` | `CONDITIONAL_SETTLEMENT_RELEASE` | $\ge 80$ | **1.00 USDC** | High-conviction conditional settlement release |
+
+---
+
+### Demo Commands Reference
+
+#### 1. Interactive Demo (Presenter Mode)
+Runs the full narrative walkthrough with step-by-step pauses:
+```bash
+bun run src/demo/runDemo.ts
+```
+
+#### 2. Automated Demo (CI / Fast Judge Run)
+Runs the full demonstration end-to-end without pausing:
+```bash
+bun run src/demo/runDemo.ts --auto
+```
+
+#### 3. Automated Verification Test Suite
+Executes the comprehensive 124-test audit suite verifying all gating, attestation, privacy boundaries, and capital actions:
+```bash
+bun test tests/testing3.test.ts
+```
+
+#### 4. REST API Server & Direct Endpoint Demonstration
+Start the backend server on port 3001:
+```bash
+bun run src/api/server.ts
+```
+
+In a second terminal, inspect agent status and available capital actions:
+```bash
+curl http://localhost:3001/api/agent/status
+```
+
+Trigger an approved Treasury Funding Release via REST:
+```bash
+curl -X POST http://localhost:3001/api/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "walletAddress": "0x5b11D95bd844e5DE93bC9759a35fc89b40152133",
+    "policyThreshold": 65,
+    "candidateAction": "treasury_release",
+    "actionAmountUSDC": 0.20,
+    "policyProfileId": "conservative",
+    "dryRun": false
+  }'
+```
+
+Trigger a blocked Capital Release (Deny Path) via REST:
+```bash
+curl -X POST http://localhost:3001/api/agent/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "walletAddress": "0x2222222222222222222222222222222222222222",
+    "policyThreshold": 80,
+    "candidateAction": "settlement_release",
+    "actionAmountUSDC": 0.50,
+    "policyProfileId": "aggressive",
+    "dryRun": true
+  }'
+```
+
+---
+
+### Scenario 1: Approved Path (Allow)
+
+**Action:** `TREASURY_FUNDING_RELEASE`  
+**Counterparty:** `0x5b11D95bd844e5DE93bC9759a35fc89b40152133`  
+**Policy Profile:** `conservative` (Required Score: $\ge 65$)  
+**Funding Amount:** 0.20 native USDC  
+
+#### Execution Flow:
+1. **Natural Language Query**: "Score cross-protocol risk for wallet `0x5b11D...` across Aave and Morpho under conservative policy."
+2. **The Graph MCP Query**: Fetches healthy positions (healthy collateral-to-debt ratio).
+3. **Chainlink CRE TEE Evaluation**: Emits attested confidential score = **100/100 (Safe)**.
+4. **Treasury Balance Check**: Verifies Treasury wallet (`0x748ABdeF...`) has sufficient native USDC.
+5. **Policy Gate Evaluation**:
+   - Required Threshold: $\ge 65$
+   - Actual Score: $100$
+   - Verdict: **PERMITTED**
+   - Status: **`FUNDING_RELEASED`**
+6. **On-Chain Dispatch**: Releases 0.20 native USDC on Arc Testnet to the counterparty wallet.
+7. **Receipt**:
+   ```json
+   {
+     "status": "FUNDING_RELEASED",
+     "actionType": "TREASURY_FUNDING_RELEASE",
+     "fromTreasury": "0x748ABdeF0775132E8F941e1513152D5eb02D3a4B",
+     "toRecipient": "0x3333333333333333333333333333333333333333",
+     "amountUSDC": 0.20,
+     "score": 100,
+     "threshold": 65,
+     "receiptMessage": "Funding released: recipient cleared conservative risk policy (100 >= 65)",
+     "transactionHash": "0x..."
+   }
+   ```
+
+---
+
+### Scenario 2: Blocked Path (Deny & Capital Protection)
+
+**Action:** `CONDITIONAL_SETTLEMENT_RELEASE`  
+**Counterparty:** `0x2222222222222222222222222222222222222222`  
+**Policy Profile:** `aggressive` (High-Conviction Required Score: $\ge 80$)  
+**Proposed Funding:** 0.50 native USDC  
+
+#### Execution Flow:
+1. **Scenario Setup**: Overleveraged portfolio (0 collateral, high debt load).
+2. **Confidential Scoring**: Scorer detects severe health factor pressure and flags high risk.
+3. **Score Output**: Attested score = **55/100 (High Risk)**.
+4. **Policy Gate Evaluation**:
+   - Required Threshold: $\ge 80$
+   - Actual Score: $55$
+   - Verdict: **REJECTED**
+   - Status: **`FUNDING_BLOCKED`**
+5. **Capital Protection**: **Strictly 0 USDC moved on Arc.**
+6. **Receipt**:
+   ```json
+   {
+     "status": "FUNDING_BLOCKED",
+     "actionType": "CONDITIONAL_SETTLEMENT_RELEASE",
+     "fromTreasury": "0x748ABdeF0775132E8F941e1513152D5eb02D3a4B",
+     "toRecipient": "0x4444444444444444444444444444444444444444",
+     "amountUSDC": 0.50,
+     "score": 55,
+     "threshold": 80,
+     "receiptMessage": "Funding blocked: confidential score below treasury risk threshold (55 < 80)",
+     "blockedReason": "FUNDING_BLOCKED: Confidential score (55) is below required treasury risk threshold (80) for Conditional Settlement Release. Action aborted.",
+     "transactionHash": undefined
+   }
+   ```
+
+---
+
+### Privacy Boundary: What Judges See vs What Stays Inside the Enclave
+
+```
++-------------------------------------+-------------------------------------+
+| PUBLIC OPERATOR / AUDIT VIEW        | CONFIDENTIAL TEE ENCLAVE (CRE)     |
++-------------------------------------+-------------------------------------+
+| Counterparty:   0xDEMO...0001       | Model Weights:   [SEALED SECRETS]   |
+| Protocols:      Aave V3, Morpho     | Threshold Caps:  [SEALED SECRETS]   |
+| Attested Score: 100 / 100           | LTV Penalties:   [SEALED SECRETS]   |
+| Action Type:    TREASURY_FUNDING    | Risk Matrix:     [SEALED SECRETS]   |
+| Gate Status:    FUNDING_RELEASED    | Pure Math Engine: QuickJS WASM     |
+| Capital Tx:     0x2a675fae...       | Strategy Sealed in Vault DON        |
++-------------------------------------+-------------------------------------+
+```
+
+---
+
+### Fail-Closed Contract on Missing Data
+
+If The Graph experiences a network timeout or returns incomplete data:
+1. `dataComplete: false` is detected.
+2. Scorer refuses to guess or assume a healthy portfolio.
+3. The policy gate strictly aborts: **`FUNDING_BLOCKED`**.
+4. Treasury capital remains 100% protected against data-outage exploits.
+
+---
+
+### Network Details
+
+- **Chain**: Circle Arc Testnet (Circle L1)
+- **Chain ID**: `5042002`
+- **RPC URL**: `https://rpc.testnet.arc.network`
+- **Native Currency**: Native USDC (18 decimals, zero ERC-20 contract overhead)
+- **Treasury Address**: `0x748ABdeF0775132E8F941e1513152D5eb02D3a4B`

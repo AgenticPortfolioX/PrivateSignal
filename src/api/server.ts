@@ -221,8 +221,11 @@ app.get('/api/agent/status', async (_req: Request, res: Response) => {
         id: a.id,
         name: a.name,
         description: a.description,
+        type: a.type,
         threshold: a.threshold,
+        requiredScore: a.requiredScore,
         amountUSDC: a.amountUSDC,
+        policyProfileId: a.policyProfileId,
       })),
       recentActions: [],
     })
@@ -250,9 +253,10 @@ app.post('/api/agent/run', rateLimitMiddleware, async (req: Request, res: Respon
       ? Math.max(0, Math.min(100, body.policyThreshold)) // Bound 0-100
       : 70
 
-    const candidateAction = ['allocate', 'transfer', 'none'].includes(body.candidateAction)
+    const validActions = ['treasury_release', 'credit_draw', 'settlement_release', 'allocate', 'transfer', 'none']
+    const candidateAction = validActions.includes(body.candidateAction)
       ? body.candidateAction
-      : 'allocate'
+      : 'treasury_release'
 
     const actionAmountUSDC = typeof body.actionAmountUSDC === 'number'
       ? Math.min(10, Math.max(0, body.actionAmountUSDC)) // Hard cap amount to 10 USDC for safety
@@ -262,11 +266,13 @@ app.post('/api/agent/run', rateLimitMiddleware, async (req: Request, res: Respon
       walletAddress,
       policyThreshold,
       candidateAction,
+      actionType: body.actionType,
       queryString: body.queryString,
       protocols: Array.isArray(body.protocols) ? body.protocols : undefined,
       policyProfileId: body.policyProfileId,
       actionAmountUSDC,
-      actionDestination: body.actionDestination,
+      actionDestination: body.actionDestination || body.toRecipient,
+      recipientAddress: body.toRecipient || body.actionDestination,
       dryRun: Boolean(body.dryRun),
     }
 

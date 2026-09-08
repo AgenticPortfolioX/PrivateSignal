@@ -25,9 +25,17 @@ import type { ScoreOutput } from '../types/scorer'
 export interface AgentConfig {
   walletAddress: string
   policyThreshold: number
-  candidateAction: 'allocate' | 'transfer' | 'none'
+  candidateAction:
+    | 'treasury_release'
+    | 'credit_draw'
+    | 'settlement_release'
+    | 'allocate'
+    | 'transfer'
+    | 'none'
+  actionType?: 'TREASURY_FUNDING_RELEASE' | 'CREDIT_LINE_DRAW' | 'CONDITIONAL_SETTLEMENT_RELEASE'
   actionAmountUSDC?: number
   actionDestination?: string
+  recipientAddress?: string
   queryString?: string
   protocols?: string[]
   policyProfileId?: string
@@ -89,7 +97,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
     recordStep(
       'CHECK_ARC_BALANCE',
       'SUCCESS',
-      `Verified native USDC balance: ${balanceInfo.balanceUSDC} USDC on Arc Testnet`,
+      `Verified Treasury native USDC balance: ${balanceInfo.balanceUSDC} USDC on Arc Testnet`,
       Date.now() - s1Start,
     )
 
@@ -146,17 +154,31 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
     let gatedActionResult: GatedActionResult | undefined
 
     if (config.candidateAction !== 'none') {
-      const candidate: CandidateAction =
-        config.candidateAction === 'allocate'
-          ? STANDARD_CANDIDATE_ACTIONS.safe_allocation
-          : {
-              id: 'custom_agent_action',
-              name: 'Custom Agent Transfer',
-              description: 'Score-gated native USDC transfer on Arc',
-              threshold: config.policyThreshold,
-              amountUSDC: config.actionAmountUSDC || 0.10,
-              recipient: config.actionDestination || '0x3333333333333333333333333333333333333333',
-            }
+      let candidate: CandidateAction
+      if (config.candidateAction === 'credit_draw') {
+        candidate = STANDARD_CANDIDATE_ACTIONS.credit_line_draw
+      } else if (config.candidateAction === 'settlement_release') {
+        candidate = STANDARD_CANDIDATE_ACTIONS.conditional_settlement_release
+      } else if (config.candidateAction === 'treasury_release' || config.candidateAction === 'allocate') {
+        candidate = STANDARD_CANDIDATE_ACTIONS.treasury_funding_release
+      } else {
+        const actType = config.actionType || 'TREASURY_FUNDING_RELEASE'
+        const fundingAmount = config.actionAmountUSDC || (actType === 'CREDIT_LINE_DRAW' ? 0.5 : actType === 'CONDITIONAL_SETTLEMENT_RELEASE' ? 1.0 : 0.2)
+        candidate = {
+          id: `act_custom_${Date.now()}`,
+          name: `${actType.replace(/_/g, ' ')}`,
+          description: `Score-gated ${actType.toLowerCase().replace(/_/g, ' ')} on Arc`,
+          type: actType,
+          fromTreasury: balanceInfo.address,
+          toRecipient: config.recipientAddress || config.actionDestination || config.walletAddress,
+          recipient: config.recipientAddress || config.actionDestination || config.walletAddress,
+          requiredScore: config.policyThreshold,
+          threshold: config.policyThreshold,
+          amountUSDC: fundingAmount,
+          fundingAmount,
+          policyProfileId: config.policyProfileId || 'conservative',
+        }
+      }
 
       gatedActionResult = await executeScoreGatedAction(candidate, scoreOutput, {
         dryRun: config.dryRun,
@@ -167,8 +189,8 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
         'POLICY_GATE_EVALUATION',
         stepStatus,
         gatedActionResult.passed
-          ? `Score ${scoreOutput.score} >= ${candidate.threshold}: Executed ${candidate.name} on Arc (tx: ${gatedActionResult.transactionHash})`
-          : `Score ${scoreOutput.score} < ${candidate.threshold}: Aborted action (${gatedActionResult.blockedReason})`,
+          ? `[FUNDING_RELEASED] [${candidate.type}] Score ${scoreOutput.score} >= ${candidate.threshold}: Released ${candidate.amountUSDC} USDC to ${candidate.toRecipient} on Arc (tx: ${gatedActionResult.transactionHash})`
+          : `[FUNDING_BLOCKED] [${candidate.type}] Score ${scoreOutput.score} < ${candidate.threshold}: Preserved capital (${gatedActionResult.blockedReason})`,
         Date.now() - s5Start,
       )
     } else {

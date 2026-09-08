@@ -389,6 +389,7 @@ export async function scoreCrossProtocolRisk(
   }
 
   return {
+    walletAddress: params.walletAddress,
     score: finalScore,
     recommendation,
     reasonCodes,
