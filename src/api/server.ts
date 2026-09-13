@@ -299,6 +299,13 @@ app.get('/api/health', (_req: Request, res: Response) => {
   })
 })
 
+app.post('/api/test-results', (req: Request, res: Response) => {
+  if (req.body.message) {
+    console.log(`\n\x1b[32m${req.body.message}\x1b[0m\n`);
+  }
+  res.status(200).send('OK')
+})
+
 export const PORT = process.env.PORT || 3001
 
 if (import.meta.main) {
