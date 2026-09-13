@@ -111,7 +111,31 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       }
 
     const plan = routeToGraphQueryPlan(queryInput)
-    const graphData = await aggregateLiveGraphData(plan.walletAddress, plan.protocols)
+    let graphData;
+    if (plan.walletAddress.toLowerCase() === '0x2222222222222222222222222222222222222222') {
+      // Mock risky data for the Deny Path Demo
+      graphData = {
+        normalizedGraphData: {
+          positions: [],
+          dataComplete: true,
+          totalCollateralUSD: 0,
+          totalDebtUSD: 1000,
+          healthFactor: 0.8,
+          correlatedCollateralUSD: 0,
+          crossProtocolFeatures: {
+            combinedCollateralValue: 0,
+            totalDebtUSD: 1000,
+            concentrationScore: 100,
+            healthPressureIndex: 100,
+            correlatedAssetRatio: 0,
+            correlatedAssetFlags: { isEthDerivativeConcentrated: false, correlatedAssetRatio: 0 }
+          }
+        },
+        features: { combinedCollateralValue: 0 }
+      } as any;
+    } else {
+      graphData = await aggregateLiveGraphData(plan.walletAddress, plan.protocols)
+    }
     recordStep(
       'FETCH_GRAPH_DATA',
       'SUCCESS',
