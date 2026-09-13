@@ -246,7 +246,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
         'POLICY_GATE_EVALUATION',
         stepStatus,
         gatedActionResult.passed
-          ? `[POLICY_GATE_PERMITTED] [${candidate.type}] Score ${scoreOutput.score} >= ${candidate.threshold}: Released ${candidate.amountUSDC} USDC to ${candidate.toRecipient} on Arc (tx: ${gatedActionResult.transactionHash})`
+          ? `[POLICY_GATE_PERMITTED] [${candidate.type}] Score ${scoreOutput.score} >= ${candidate.threshold}: Released ${candidate.amountUSDC} USDC to ${candidate.toRecipient} on Arc (tx: ${gatedActionResult.transactionHash} | Explorer: https://testnet.explorer.arc.network/tx/${gatedActionResult.transactionHash})`
           : `[FUNDING_BLOCKED] [${candidate.type}] Score ${scoreOutput.score} < ${candidate.threshold}: Preserved capital (${gatedActionResult.blockedReason})`,
         Date.now() - s5Start,
       )

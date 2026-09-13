@@ -14,7 +14,8 @@ async function colorize() {
     reset: '\x1b[0m',
     green: '\x1b[32m',
     red: '\x1b[31m',
-    blue: '\x1b[34m'
+    blue: '\x1b[34m',
+    cyan: '\x1b[36m'
   };
 
   formatted = formatted
@@ -25,7 +26,8 @@ async function colorize() {
     .replace(/\[FUNDING_BLOCKED\]([^"\n]+)/g, `${c.red}[FUNDING_BLOCKED]$1${c.reset}`)
     .replace(/"agentWalletAddress":\s*"([^"]+)"/g, `"${c.blue}agentWalletAddress${c.reset}": "${c.blue}$1${c.reset}"`)
     .replace(/"balanceUSDC":\s*"([^"]+)"/g, `"${c.blue}balanceUSDC${c.reset}": "${c.blue}$1${c.reset}"`)
-    .replace(/"availableActions":/g, `"${c.blue}availableActions${c.reset}":`);
+    .replace(/"availableActions":/g, `"${c.blue}availableActions${c.reset}":`)
+    .replace(/"transactionHash":\s*"([^"]+)"/g, `"${c.green}transactionHash${c.reset}": "${c.green}$1${c.reset}"\n  ${c.cyan}➔ View on Explorer: https://testnet.explorer.arc.network/tx/$1${c.reset}`);
 
   console.log(formatted);
 }
