@@ -78,6 +78,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
     bright: '\x1b[1m',
     green: '\x1b[32m',
     red: '\x1b[31m',
+    yellow: '\x1b[33m',
   }
 
   const recordStep = (
@@ -107,6 +108,10 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
       displayDetails = displayDetails.replace(/\[FUNDING_BLOCKED\]/g, `${c.red}[FUNDING_BLOCKED]${c.reset}`)
       displayDetails = displayDetails.replace(/\(FUNDING_BLOCKED: Confidential score \(\d+\)/g, (match) => `${c.red}${match}${c.reset}`)
     }
+
+    displayDetails = displayDetails.replace(/\[POLICY_GATE_PERMITTED\]/g, `${c.yellow}[POLICY_GATE_PERMITTED]${c.reset}`)
+    displayDetails = displayDetails.replace(/\[TREASURY_FUNDING_RELEASE\]/g, `${c.yellow}[TREASURY_FUNDING_RELEASE]${c.reset}`)
+    displayDetails = displayDetails.replace(/\[CONDITIONAL_SETTLEMENT_RELEASE\]/g, `${c.yellow}[CONDITIONAL_SETTLEMENT_RELEASE]${c.reset}`)
 
     console.log(`[AGENT_STEP] ${displayStatus} ${name} (${durationMs}ms) — ${displayDetails}`)
   }
@@ -241,7 +246,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
         'POLICY_GATE_EVALUATION',
         stepStatus,
         gatedActionResult.passed
-          ? `[FUNDING_RELEASED] [${candidate.type}] Score ${scoreOutput.score} >= ${candidate.threshold}: Released ${candidate.amountUSDC} USDC to ${candidate.toRecipient} on Arc (tx: ${gatedActionResult.transactionHash})`
+          ? `[POLICY_GATE_PERMITTED] [${candidate.type}] Score ${scoreOutput.score} >= ${candidate.threshold}: Released ${candidate.amountUSDC} USDC to ${candidate.toRecipient} on Arc (tx: ${gatedActionResult.transactionHash})`
           : `[FUNDING_BLOCKED] [${candidate.type}] Score ${scoreOutput.score} < ${candidate.threshold}: Preserved capital (${gatedActionResult.blockedReason})`,
         Date.now() - s5Start,
       )

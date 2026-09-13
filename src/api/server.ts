@@ -207,6 +207,27 @@ app.get('/api/agent/status', async (_req: Request, res: Response) => {
       // Graceful fallback if offline
     }
 
+    const availableActions = Object.values(STANDARD_CANDIDATE_ACTIONS).map((a) => ({
+      id: a.id,
+      name: a.name,
+      description: a.description,
+      type: a.type,
+      threshold: a.threshold,
+      requiredScore: a.requiredScore,
+      amountUSDC: a.amountUSDC,
+      policyProfileId: a.policyProfileId,
+    }))
+
+    const c = {
+      reset: '\x1b[0m',
+      green: '\x1b[32m',
+      cyan: '\x1b[36m'
+    }
+    
+    console.log(`\n[AGENT_STATUS] ${c.green}[SUCCESS]${c.reset} Queried Arc Testnet Treasury Address: ${c.cyan}${agentAddress}${c.reset}`)
+    console.log(`[AGENT_STATUS] ${c.green}[SUCCESS]${c.reset} Native USDC Balance: ${c.cyan}$${balanceFormatted} USDC${c.reset}`)
+    console.log(`[AGENT_STATUS] ${c.green}[SUCCESS]${c.reset} Registered Policies: ${c.cyan}${availableActions.length} candidate actions active${c.reset}\n`)
+
     res.status(200).json({
       network: 'Arc Testnet (Circle L1)',
       chainId: 5042002,
@@ -217,16 +238,7 @@ app.get('/api/agent/status', async (_req: Request, res: Response) => {
       gasModel: 'Native USDC for gas (zero ETH needed)',
       paymasterSupport: 'Arc native gas model natively uses USDC without separate paymaster contract',
       liveRpcConnected: isLive,
-      availableActions: Object.values(STANDARD_CANDIDATE_ACTIONS).map((a) => ({
-        id: a.id,
-        name: a.name,
-        description: a.description,
-        type: a.type,
-        threshold: a.threshold,
-        requiredScore: a.requiredScore,
-        amountUSDC: a.amountUSDC,
-        policyProfileId: a.policyProfileId,
-      })),
+      availableActions,
       recentActions: [],
     })
   } catch (err: any) {

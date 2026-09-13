@@ -13,7 +13,8 @@ async function colorize() {
   const c = {
     reset: '\x1b[0m',
     green: '\x1b[32m',
-    red: '\x1b[31m'
+    red: '\x1b[31m',
+    blue: '\x1b[34m'
   };
 
   formatted = formatted
@@ -21,7 +22,10 @@ async function colorize() {
     .replace(/"FAILED"/g, `"${c.red}BLOCKED${c.reset}"`)
     .replace(/Attested score: 100\/100 \(SAFE\)/g, `${c.green}Attested score: 100/100 (SAFE)${c.reset}`)
     .replace(/Attested score: 55\/100 \([^)]+\)/g, `${c.red}Attested score: 55/100 (UNSAFE)${c.reset}`)
-    .replace(/\[FUNDING_BLOCKED\]([^"\n]+)/g, `${c.red}[FUNDING_BLOCKED]$1${c.reset}`);
+    .replace(/\[FUNDING_BLOCKED\]([^"\n]+)/g, `${c.red}[FUNDING_BLOCKED]$1${c.reset}`)
+    .replace(/"agentWalletAddress":\s*"([^"]+)"/g, `"${c.blue}agentWalletAddress${c.reset}": "${c.blue}$1${c.reset}"`)
+    .replace(/"balanceUSDC":\s*"([^"]+)"/g, `"${c.blue}balanceUSDC${c.reset}": "${c.blue}$1${c.reset}"`)
+    .replace(/"availableActions":/g, `"${c.blue}availableActions${c.reset}":`);
 
   console.log(formatted);
 }
