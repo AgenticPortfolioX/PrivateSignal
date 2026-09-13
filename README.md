@@ -216,6 +216,12 @@ Arc Agent Loop (Circle L1)
 ## Sponsor Fit
 
 ### 1. Chainlink CRE Confidential Workflows
+**Why we are eligible for the bounty**: PrivateSignal uses the Chainlink Confidential Risk Engine (CRE) to execute proprietary scoring algorithms inside a hardware-isolated Trusted Execution Environment (TEE). It securely loads sealed risk model weights from the Vault DON and computes a cross-protocol risk score in WebAssembly (WASM) without ever exposing the internal model logic to the public.
+
+**Key Code Usage**:
+- [src/handlers/confidentialScorer.ts#L262-L402](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/handlers/confidentialScorer.ts#L262-L402) - *The core confidential risk evaluation math running securely inside the CRE TEE.*
+- [privatesignal/workflow.yaml](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/privatesignal/workflow.yaml) - *The CRE workflow deployment configuration.*
+
 PrivateSignal uses confidential execution as the product core:
 - **Confidential Scorer Handler**: Compiled for enclave constraints (`src/handlers/confidentialScorer.ts`), operating without Node.js built-ins (`fs`, `crypto`, `http`) or browser globals.
 - **Vault DON Secrets**: Injected sealed model and policy parameters via `cre.capabilities.Secrets` (`secrets.yaml`).
@@ -225,6 +231,12 @@ PrivateSignal uses confidential execution as the product core:
 *This maps directly to privacy-preserving risk assessment and policy enforcement.*
 
 ### 2. The Graph
+**Why we are eligible for the bounty**: PrivateSignal ingests live, standardized cross-protocol risk state from Aave V3 and Morpho Blue using decentralized network subgraphs. It features a novel Graph Model Context Protocol (MCP) router that translates natural-language AI prompts directly into structured, multi-protocol subgraph queries.
+
+**Key Code Usage**:
+- [src/graph/nlRouter.ts#L30-L75](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/graph/nlRouter.ts#L30-L75) - *The Graph MCP Tool Router for natural language mapping.*
+- [src/graph/queries.ts](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/graph/queries.ts) - *Direct GraphQL queries interfacing with the decentralized network.*
+
 PrivateSignal does not merely “query a subgraph”:
 - **Decentralized Network Subgraphs**: Connects to live subgraphs for Aave V3 (`JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk`) and Morpho Blue (`8Lz789DP5VKLXumTMTgygjU2xtuzx8AhbaacgN5PYCAs`).
 - **Standardized Schema Normalization**: Maps diverse lending models to canonical `UnifiedAccountData` through `src/graph/schemaMapper.ts`.
@@ -234,6 +246,12 @@ PrivateSignal does not merely “query a subgraph”:
 *Standards leverage is visible: one pattern across protocols, not custom one-off glue.*
 
 ### 3. Arc
+**Why we are eligible for the bounty**: PrivateSignal utilizes Arc Testnet as its execution layer for autonomous agent operations, where the agent pays in native USDC to evaluate policy gates. The confidential risk score strictly gates the execution of on-chain capital transfers utilizing Native USDC without needing separate ERC-20 approvals.
+
+**Key Code Usage**:
+- [src/arc/gatedAction.ts#L340-L389](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/arc/gatedAction.ts#L340-L389) - *Viem executing the native USDC capital transfer on Arc Testnet.*
+- [src/arc/agentWallet.ts](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/arc/agentWallet.ts) - *Arc Testnet connection and viem configuration.*
+
 PrivateSignal uses Arc as the agent execution environment:
 - **Native USDC Gas Model**: Operates on Arc Testnet (`chainId: 5042`) where USDC is the native gas currency with 18 decimals (zero ERC-20 `approve`/`transfer` calls).
 - **Micropayment Sponsorship**: Agent pays 0.10 native USDC for confidential score evaluation.
