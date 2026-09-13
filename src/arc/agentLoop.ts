@@ -103,10 +103,9 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
     }
 
     if (displayDetails.includes('FUNDING_BLOCKED')) {
-      // Colorize the blocked reason specifically
-      displayDetails = displayDetails.replace(/\[FUNDING_BLOCKED\].*/, (match) => {
-         return `${c.red}${match}${c.reset}`
-      })
+      // Colorize ONLY specific substrings requested by user
+      displayDetails = displayDetails.replace(/\[FUNDING_BLOCKED\]/g, `${c.red}[FUNDING_BLOCKED]${c.reset}`)
+      displayDetails = displayDetails.replace(/\(FUNDING_BLOCKED: Confidential score \(\d+\)/g, (match) => `${c.red}${match}${c.reset}`)
     }
 
     console.log(`[AGENT_STEP] ${displayStatus} ${name} (${durationMs}ms) — ${displayDetails}`)
