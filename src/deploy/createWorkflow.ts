@@ -1,8 +1,5 @@
-/**
- * @title CRE Confidential Workflow Deployment & Registration
- * @author Justin Gramke
- * @notice Connects to Chainlink CRE on production DON, registers workflow, initializes Vault secrets, and outputs verifiable evidence.
- */
+// Registers the PrivateSignal confidential workflow on the Chainlink CRE DON.
+// Justin Gramke
 
 import 'dotenv/config'
 import { scoreCrossProtocolRisk } from '../handlers/confidentialScorer'

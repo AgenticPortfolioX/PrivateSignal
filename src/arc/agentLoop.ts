@@ -1,8 +1,5 @@
-/**
- * @title PrivateSignal Arc Agent Loop
- * @author Justin Gramke
- * @notice Orchestrates the closed-loop agent cycle including evaluation, and score-gated execution.
- */
+// Arc agent loop - orchestrates the full evaluation and score-gated execution cycle.
+// Justin Gramke
 
 import 'dotenv/config'
 import {

@@ -1,8 +1,5 @@
-/**
- * @title Arc Wallet & Native USDC Payment Service
- * @author Justin Gramke
- * @notice Handles native USDC payments on Arc L1.
- */
+// Arc wallet setup and native USDC balance queries.
+// Justin Gramke
 
 import 'dotenv/config'
 import {

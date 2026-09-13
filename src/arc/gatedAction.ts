@@ -1,10 +1,6 @@
-/**
- * @title PrivateSignal Policy-Gated Capital Release (Arc L1)
- * @author Justin Gramke
- * @notice Simulates a financial control function: releases treasury capital
- *         to counterparty wallets ONLY if PrivateSignal's confidential risk score
- *         clears the policy threshold.
- */
+// Policy-gated capital release on Arc L1.
+// Releases treasury USDC only when the confidential risk score clears the threshold.
+// Justin Gramke
 
 import 'dotenv/config'
 import { parseEther, type Hash } from 'viem'

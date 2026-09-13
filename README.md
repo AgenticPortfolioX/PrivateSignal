@@ -3,7 +3,7 @@
 > **Private risk intelligence for on-chain agents.**  
 > Public Graph data in → private CRE scoring → public score out → Arc treasury funding released or blocked.
 
-[![Tests](https://img.shields.io/badge/tests-66%20passing-10b981.svg)](#tests)
+[![Tests](https://img.shields.io/badge/tests-124%20passing-10b981.svg)](#tests)
 [![Chainlink CRE](https://img.shields.io/badge/Chainlink-CRE%20Confidential-375bd2.svg)](https://chain.link)
 [![The Graph](https://img.shields.io/badge/The%20Graph-MCP%20%26%20Subgraphs-6b21a8.svg)](https://thegraph.com)
 [![Arc Testnet](https://img.shields.io/badge/Arc%20Network-Native%20USDC-059669.svg)](https://arc.network)
@@ -482,3 +482,21 @@ bun test
 
 Total: 124 pass, 0 fail
 ```
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for full terms.
+
+---
+
+## Ownership
+
+**PrivateSignal** is designed, built, and owned by **Justin Gramke**.
+
+All source code, architecture, and documentation in this repository are the original work of Justin Gramke, submitted as an individual entrant to ETHGlobal Online 2026.
+
+The `AgenticPortfolioX` GitHub organization is operated by Justin Gramke on his own behalf.
+
+> Copyright © 2026 Justin Gramke. All rights reserved.

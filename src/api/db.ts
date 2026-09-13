@@ -1,8 +1,6 @@
-/**
- * @title PrivateSignal Query Storage
- * @author Justin Gramke
- * @notice SQLite storage for public metadata audit logs.
- */
+// SQLite storage for public query audit metadata.
+// Stores only sanitized fields - no model weights, thresholds, or raw features.
+// Justin Gramke
 
 import { Database } from 'bun:sqlite'
 import path from 'path'

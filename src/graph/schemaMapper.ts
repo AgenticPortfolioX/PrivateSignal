@@ -1,8 +1,5 @@
-/**
- * @title PrivateSignal Graph Schema Mapper
- * @author Justin Gramke
- * @notice Normalizes disparate protocol GraphQL responses into a unified canonical structure.
- */
+// Normalizes Aave V3 and Morpho Blue GraphQL responses into a shared canonical structure.
+// Justin Gramke
 
 import type { MessariSubgraphResponse, RawPosition, SupportedProtocol } from './queries'
 import { isSupportedProtocol } from './queries'

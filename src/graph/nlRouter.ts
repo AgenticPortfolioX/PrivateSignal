@@ -1,8 +1,5 @@
-/**
- * @title PrivateSignal Query Router
- * @author Justin Gramke
- * @notice Translates structured and natural language queries into deterministic MCP tool invocations.
- */
+// Routes natural language and structured queries to Graph MCP tool calls.
+// Justin Gramke
 
 import {
   SUPPORTED_PROTOCOLS,

@@ -1,8 +1,5 @@
-/**
- * @title PrivateSignal Graph Queries
- * @author Justin Gramke
- * @notice Standardized Multi-Protocol Graph Queries for live subgraph endpoints.
- */
+// GraphQL queries for Aave V3 and Morpho Blue via the Messari subgraph schema.
+// Justin Gramke
 
 export const SUPPORTED_PROTOCOLS = ['aave-v3', 'morpho', 'morpho-blue'] as const
 export type SupportedProtocol = typeof SUPPORTED_PROTOCOLS[number]

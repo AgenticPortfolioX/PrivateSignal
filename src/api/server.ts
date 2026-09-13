@@ -1,8 +1,5 @@
-/**
- * @title PrivateSignal Product API
- * @author Justin Gramke
- * @notice Provides HTTP endpoints for routing score evaluations and retrieving audit history.
- */
+// PrivateSignal REST API - score evaluation, agent control, and audit history.
+// Justin Gramke
 
 import express, { type Express, type Request, type Response, type NextFunction } from 'express'
 import cors from 'cors'

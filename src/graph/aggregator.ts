@@ -1,8 +1,5 @@
-/**
- * @title PrivateSignal Graph Aggregator
- * @author Justin Gramke
- * @notice Connects to Graph endpoints to fetch and aggregate multi-protocol lending state.
- */
+// Fetches and aggregates live multi-protocol lending state from The Graph.
+// Justin Gramke
 
 import 'dotenv/config'
 import {
