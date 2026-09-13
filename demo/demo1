@@ -60,7 +60,7 @@ bun run src/api/server.ts
 
 ### 💻 Step 2: In Terminal 2 — Inspect Agent & Treasury Status
 ```powershell
-curl.exe -s http://localhost:3001/api/agent/status | bun -e "const d = await Bun.stdin.json(); console.log('\x1b[32m' + JSON.stringify(d, null, 2) + '\x1b[0m')"
+curl.exe -s http://localhost:3001/api/agent/status | bun run src/demo/colorizeClient.ts
 ```
 
 > *"A status check returns the agent's Arc L1 treasury address, available native USDC balance, and registered candidate action policies."*
@@ -69,7 +69,7 @@ curl.exe -s http://localhost:3001/api/agent/status | bun -e "const d = await Bun
 
 ### 💻 Step 3: In Terminal 2 — Trigger Approved Treasury Release (Allow Path)
 ```powershell
-curl.exe -s -X POST http://localhost:3001/api/agent/run -H "Content-Type: application/json" -d '{\"walletAddress\": \"0x5b11D95bd844e5DE93bC9759a35fc89b40152133\", \"policyThreshold\": 65, \"candidateAction\": \"treasury_release\", \"actionAmountUSDC\": 0.20, \"policyProfileId\": \"conservative\", \"dryRun\": false}' | bun -e "const d = await Bun.stdin.json(); console.log('\x1b[32m' + JSON.stringify(d, null, 2) + '\x1b[0m')"
+curl.exe -s -X POST http://localhost:3001/api/agent/run -H "Content-Type: application/json" -d '{\"walletAddress\": \"0x5b11D95bd844e5DE93bC9759a35fc89b40152133\", \"policyThreshold\": 65, \"candidateAction\": \"treasury_release\", \"actionAmountUSDC\": 0.20, \"policyProfileId\": \"conservative\", \"dryRun\": false}' | bun run src/demo/colorizeClient.ts
 ```
 
 > *"When an approved counterparty is evaluated, the API runs the full Graph-to-CRE-to-Arc pipeline and returns FUNDING_RELEASED with the on-chain transaction hash."*
@@ -78,7 +78,7 @@ curl.exe -s -X POST http://localhost:3001/api/agent/run -H "Content-Type: applic
 
 ### 💻 Step 4: In Terminal 2 — Trigger Blocked Capital Release (Deny Path)
 ```powershell
-curl.exe -s -X POST http://localhost:3001/api/agent/run -H "Content-Type: application/json" -d '{\"walletAddress\": \"0x2222222222222222222222222222222222222222\", \"policyThreshold\": 80, \"candidateAction\": \"settlement_release\", \"actionAmountUSDC\": 0.50, \"policyProfileId\": \"aggressive\", \"dryRun\": false}' | bun -e "const d = await Bun.stdin.json(); console.log('\x1b[32m' + JSON.stringify(d, null, 2) + '\x1b[0m')"
+curl.exe -s -X POST http://localhost:3001/api/agent/run -H "Content-Type: application/json" -d '{\"walletAddress\": \"0x2222222222222222222222222222222222222222\", \"policyThreshold\": 80, \"candidateAction\": \"settlement_release\", \"actionAmountUSDC\": 0.50, \"policyProfileId\": \"aggressive\", \"dryRun\": false}' | bun run src/demo/colorizeClient.ts
 ```
 
 > *"When a high-risk portfolio hits the endpoint, the API immediately returns FUNDING_BLOCKED, halting capital movement and protecting the treasury."*

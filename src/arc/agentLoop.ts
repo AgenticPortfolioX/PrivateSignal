@@ -73,6 +73,13 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
   const startTime = Date.now()
   const steps: AgentLoopStep[] = []
 
+  const c = {
+    reset: '\x1b[0m',
+    bright: '\x1b[1m',
+    green: '\x1b[32m',
+    red: '\x1b[31m',
+  }
+
   const recordStep = (
     name: string,
     status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'SKIPPED',
@@ -80,7 +87,29 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
     durationMs: number,
   ) => {
     steps.push({ name, status, details, durationMs })
-    console.log(`[AGENT_STEP] [${status}] ${name} (${durationMs}ms) — ${details}`)
+    
+    let displayStatus = status === 'FAILED' ? `${c.red}[BLOCKED]${c.reset}` : `[${status}]`
+    if (status === 'SUCCESS') displayStatus = `${c.green}[SUCCESS]${c.reset}`
+
+    let displayDetails = details
+    
+    // Custom replacements requested by user
+    if (displayDetails.includes('Attested score: 100/100 (SAFE)')) {
+      displayDetails = displayDetails.replace('Attested score: 100/100 (SAFE)', `${c.green}Attested score: 100/100 (SAFE)${c.reset}`)
+    }
+    
+    if (displayDetails.includes('Attested score: 55/100 (HIGH_RISK)') || displayDetails.includes('Attested score: 55/100')) {
+      displayDetails = displayDetails.replace(/Attested score: 55\/100.*/, `${c.red}Attested score: 55/100 (UNSAFE)${c.reset}`)
+    }
+
+    if (displayDetails.includes('FUNDING_BLOCKED')) {
+      // Colorize the blocked reason specifically
+      displayDetails = displayDetails.replace(/\[FUNDING_BLOCKED\].*/, (match) => {
+         return `${c.red}${match}${c.reset}`
+      })
+    }
+
+    console.log(`[AGENT_STEP] ${displayStatus} ${name} (${durationMs}ms) — ${displayDetails}`)
   }
 
   try {
@@ -169,7 +198,7 @@ export async function runAgentLoop(config: AgentConfig): Promise<AgentResult> {
     recordStep(
       'CONFIDENTIAL_TEE_SCORING',
       'SUCCESS',
-      `Attested score: ${scoreOutput.score}/100 (${scoreOutput.recommendation.toUpperCase()}), DON: ${attestationSummary.donId}`,
+      `Attested score: ${scoreOutput.score}/100 (${scoreOutput.recommendation.toUpperCase() === 'HIGH_RISK' ? 'UNSAFE' : scoreOutput.recommendation.toUpperCase()}), DON: ${attestationSummary.donId}`,
       Date.now() - s4Start,
     )
 
