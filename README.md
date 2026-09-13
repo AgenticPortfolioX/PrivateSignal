@@ -1,7 +1,7 @@
 # PrivateSignal
 
 > **Private risk intelligence for on-chain agents.**  
-> Live multi-protocol data from The Graph enters a Chainlink TEE. A proprietary model scores it in confidential compute. Only a public verdict leaves the enclave. Arc agents pay native USDC and are hard-gated by the confidential result.
+> Public Graph data in → private CRE scoring → public score out → Arc treasury funding released or blocked.
 
 [![Tests](https://img.shields.io/badge/tests-66%20passing-10b981.svg)](#tests)
 [![Chainlink CRE](https://img.shields.io/badge/Chainlink-CRE%20Confidential-375bd2.svg)](https://chain.link)
@@ -30,7 +30,7 @@ Most teams solve this by hiding the model on a centralized server. That restores
 - **Public multi-protocol state** from The Graph
 - **Private scoring** inside a Chainlink CRE Trusted Execution Environment (TEE)
 - **Only a public verdict** leaves the enclave
-- **Arc agents pay for the score** in native USDC and are hard-gated by it
+- **Arc treasury funding is released or blocked** by the confidential score — native USDC, no ERC-20 overhead
 
 This is not a liquidation bot. It is **confidential decision infrastructure**.
 
@@ -76,7 +76,7 @@ This is exactly the class of problem CRE Confidential Workflows are for: **priva
 2. **Route natural-language intent** through Graph MCP into structured multi-protocol queries.
 3. **Score privately** inside a Chainlink CRE confidential handler using sealed model weights and policy thresholds from Vault DON secrets.
 4. **Emit only a public verdict** from the confidential workflow.
-5. **Let an Arc agent pay in native USDC** and execute or abort an on-chain action based on that verdict.
+5. **Gate an Arc treasury action** — on the allow path, native USDC is released; on the deny path, zero capital moves.
 
 > **Public data in. Private reasoning sealed. Public decision out. Capital movement gated.**
 
@@ -216,17 +216,17 @@ Arc Agent Loop (Circle L1)
 ## Sponsor Fit
 
 ### 1. Chainlink CRE Confidential Workflows
-**Why we are eligible for the bounty**: PrivateSignal uses the Chainlink Confidential Risk Engine (CRE) to execute proprietary scoring algorithms inside a hardware-isolated Trusted Execution Environment (TEE). It securely loads sealed risk model weights from the Vault DON and computes a cross-protocol risk score in WebAssembly (WASM) without ever exposing the internal model logic to the public.
+**Why we are eligible for the bounty**: PrivateSignal uses the Chainlink Runtime Environment (CRE) Confidential Workflows to execute proprietary scoring algorithms inside a hardware-isolated Trusted Execution Environment (TEE). It securely loads sealed risk model weights from the Vault DON and computes a cross-protocol risk score in WebAssembly (WASM) without ever exposing the internal model logic to the public.
 
 **Key Code Usage**:
-- [src/handlers/confidentialScorer.ts#L262-L402](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/handlers/confidentialScorer.ts#L262-L402) - *The core confidential risk evaluation math running securely inside the CRE TEE.*
-- [privatesignal/workflow.yaml](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/privatesignal/workflow.yaml) - *The CRE workflow deployment configuration.*
+- [src/handlers/confidentialScorer.ts#L262-L402](https://github.com/AgenticPortfolioX/PrivateSignal/blob/main/src/handlers/confidentialScorer.ts#L262-L402) - *The core confidential risk evaluation math running inside the CRE TEE.*
+- [privatesignal/workflow.yaml](https://github.com/AgenticPortfolioX/PrivateSignal/blob/main/privatesignal/workflow.yaml) - *The CRE workflow deployment configuration.*
 
 PrivateSignal uses confidential execution as the product core:
 - **Confidential Scorer Handler**: Compiled for enclave constraints (`src/handlers/confidentialScorer.ts`), operating without Node.js built-ins (`fs`, `crypto`, `http`) or browser globals.
 - **Vault DON Secrets**: Injected sealed model and policy parameters via `cre.capabilities.Secrets` (`secrets.yaml`).
 - **Verdict**: Consumed by the application and agent loop.
-- **No Bypass**: There is no valid judged decision path that bypasses confidential scoring.
+- **Honest Prototype Path**: The interactive demo routes through the identical codebase via a local harness (`LOCAL_PROTOTYPE_MODE`); deployed private-registry CRE evidence is documented separately in `docs/deployment-evidence.md`.
 
 *This maps directly to privacy-preserving risk assessment and policy enforcement.*
 
@@ -234,8 +234,8 @@ PrivateSignal uses confidential execution as the product core:
 **Why we are eligible for the bounty**: PrivateSignal ingests live, standardized cross-protocol risk state from Aave V3 and Morpho Blue using decentralized network subgraphs. It features a novel Graph Model Context Protocol (MCP) router that translates natural-language AI prompts directly into structured, multi-protocol subgraph queries.
 
 **Key Code Usage**:
-- [src/graph/nlRouter.ts#L30-L75](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/graph/nlRouter.ts#L30-L75) - *The Graph MCP Tool Router for natural language mapping.*
-- [src/graph/queries.ts](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/graph/queries.ts) - *Direct GraphQL queries interfacing with the decentralized network.*
+- [src/graph/nlRouter.ts#L30-L75](https://github.com/AgenticPortfolioX/PrivateSignal/blob/main/src/graph/nlRouter.ts#L30-L75) - *The Graph MCP Tool Router for natural language mapping.*
+- [src/graph/queries.ts](https://github.com/AgenticPortfolioX/PrivateSignal/blob/main/src/graph/queries.ts) - *Direct GraphQL queries interfacing with the decentralized network.*
 
 PrivateSignal does not merely “query a subgraph”:
 - **Decentralized Network Subgraphs**: Connects to live subgraphs for Aave V3 (`JCNWRypm7FYwV8fx5HhzZPSFaMxgkPuw4TnR3Gpi81zk`) and Morpho Blue (`8Lz789DP5VKLXumTMTgygjU2xtuzx8AhbaacgN5PYCAs`).
@@ -246,17 +246,17 @@ PrivateSignal does not merely “query a subgraph”:
 *Standards leverage is visible: one pattern across protocols, not custom one-off glue.*
 
 ### 3. Arc
-**Why we are eligible for the bounty**: PrivateSignal utilizes Arc Testnet as its execution layer for autonomous agent operations, where the agent pays in native USDC to evaluate policy gates. The confidential risk score strictly gates the execution of on-chain capital transfers utilizing Native USDC without needing separate ERC-20 approvals.
+**Why we are eligible for the bounty**: PrivateSignal uses Arc Testnet as its treasury execution layer, where a confidential CRE score is the sole gate on native USDC capital releases. On the allow path, USDC moves; on the deny path, zero capital moves — no ERC-20 `approve`/`transfer` overhead in either case.
 
 **Key Code Usage**:
-- [src/arc/gatedAction.ts#L340-L389](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/arc/gatedAction.ts#L340-L389) - *Viem executing the native USDC capital transfer on Arc Testnet.*
-- [src/arc/agentWallet.ts](file:///c:/Users/jmgra/antigravityagents/.agents/workflows/privatesignal/src/arc/agentWallet.ts) - *Arc Testnet connection and viem configuration.*
+- [src/arc/gatedAction.ts#L340-L389](https://github.com/AgenticPortfolioX/PrivateSignal/blob/main/src/arc/gatedAction.ts#L340-L389) - *Viem executing the score-gated native USDC capital transfer on Arc Testnet.*
+- [src/arc/agentWallet.ts](https://github.com/AgenticPortfolioX/PrivateSignal/blob/main/src/arc/agentWallet.ts) - *Arc Testnet connection and Viem configuration.*
 
 PrivateSignal uses Arc as the agent execution environment:
-- **Native USDC Gas Model**: Operates on Arc Testnet (`chainId: 5042`) where USDC is the native gas currency with 18 decimals (zero ERC-20 `approve`/`transfer` calls).
-- **Micropayment Sponsorship**: Agent pays 0.10 native USDC for confidential score evaluation.
-- **Hard Score Gating**: Evaluates attested score against policy thresholds before allowing execution (`src/arc/gatedAction.ts`).
-- **First-Class Outcomes**: Both blocked action (deny) and permitted action (allow) paths are fully tested and proven.
+- **Native USDC Gas Model**: Operates on Arc Testnet (`chainId: 5042002`) where USDC is the native gas currency with 18 decimals (zero ERC-20 `approve`/`transfer` calls).
+- **Score-Gated Capital Release**: The confidential score is the sole decision signal — above threshold triggers `FUNDING_RELEASED`; below threshold triggers `FUNDING_BLOCKED` with zero capital moved.
+- **Hard Score Gating**: Policy threshold enforced in `src/arc/gatedAction.ts` before any on-chain action executes.
+- **First-Class Outcomes**: Both the allow path (USDC released) and deny path (0 USDC moved) are fully tested and proven.
 
 *Arc is where confidential intelligence becomes capital policy.*
 
@@ -326,7 +326,6 @@ AGENT_PRIVATE_KEY=your_private_key_here
 
 ### Running Tests
 ```bash
-# Run all 50 tests across 6 test suites
 bun test
 
 # Validate strict TypeScript compilation
@@ -359,20 +358,20 @@ bun run deploy:workflow
 - **Prompt**: `"Score cross-protocol risk for wallet 0x1111111111111111111111111111111111111111 across Aave and Morpho under conservative policy"`
 - **Execution Flow**:
   1. Graph aggregates live multi-protocol positions across Aave V3 and Morpho.
-  2. CRE TEE evaluates portfolio and emits public healthy score: `100 / 100` (`SAFE`).
+  2. CRE confidential workflow evaluates portfolio and emits public score: `100 / 100` (`SAFE`).
   3. Arc agent evaluates policy gate.
-  4. Policy gate evaluates `100 >= 65` $\rightarrow$ **PERMITTED**.
-  5. Agent executes permitted action on Arc: 0.20 native USDC transfer (Tx: `0x7b4a...`).
-  6. Public receipt records payment and action with zero leaked strategy weights.
+  4. Policy gate evaluates `100 >= 65` → **PERMITTED**.
+  5. Agent executes `FUNDING_RELEASED` on Arc: 0.20 native USDC transferred (tx hash logged live by agent loop).
+  6. Public receipt records the action with zero leaked strategy weights.
 
 ### Scenario 2 — Blocked Action (Overleveraged Portfolio)
 - **Prompt**: `"Score cross-protocol risk for wallet 0x2222222222222222222222222222222222222222 across Aave and Morpho under aggressive policy"`
 - **Execution Flow**:
-  1. Graph aggregates positions revealing 91.76% aggregate LTV and low health factor.
-  2. CRE TEE enclave detects high leverage and staking derivative concentration, emitting score: `42 / 100` (`HIGH_RISK`).
+  1. Graph aggregates positions revealing high aggregate LTV and low health factor.
+  2. CRE confidential workflow detects high leverage and concentration, emitting score: `55 / 100` (`UNSAFE`).
   3. Arc agent evaluates policy gate.
-  4. Policy gate evaluates `42 < 80` $\rightarrow$ **REJECTED**.
-  5. **No capital is dispatched on Arc**, completely protecting the agent treasury.
+  4. Policy gate evaluates `55 < 80` → **REJECTED** (`FUNDING_BLOCKED`).
+  5. **Zero capital is dispatched on Arc**, completely protecting the treasury.
   6. Public receipt logs the refusal reason without leaking model internals.
 
 > **These two paths matter. A score that cannot block action is not policy. A score that cannot allow action is not useful.**
@@ -384,7 +383,7 @@ bun run deploy:workflow
 | Component | Status | Notes |
 | :--- | :--- | :--- |
 | **Graph Subgraph Queries** | **LIVE** | Introspected queries to live decentralized network subgraphs (Aave V3 & Morpho) |
-| **CRE Confidential Scoring Path** | **LIVE** | Deployed to private staging registry; interactive app routes locally using identical model |
+| **CRE Confidential Scoring Path** | **LIVE** | Deployed to private staging registry (see Real CRE Deployment Evidence below); interactive demo routes through identical local codebase (`LOCAL_PROTOTYPE_MODE`) |
 | **Arc RPC & Balances** | **LIVE** | Live JSON-RPC queries to Arc Testnet (`https://rpc.testnet.arc.circle.com`) |
 | **Gated Actions** | **LIVE** | Native USDC value transfers (18 decimals), both allow and deny paths |
 | **Attestation Verification** | **OPTIONAL** | App-level verification is explicit (`verified:false`) to reflect honest envelope |
@@ -414,11 +413,11 @@ bun run deploy:workflow
 *What to look for: Shared standardized pattern across protocols, live data ingestion, natural language MCP as a real entry point, and cross-protocol features driving the score.*
 
 ### 3. Arc
-- **Wallet & Fee Payments**: [`src/arc/agentWallet.ts`](src/arc/agentWallet.ts)
-- **Gated Action Execution**: [`src/arc/gatedAction.ts`](src/arc/gatedAction.ts)
+- **Wallet & Native USDC**: [`src/arc/agentWallet.ts`](src/arc/agentWallet.ts)
+- **Score-Gated Capital Release**: [`src/arc/gatedAction.ts`](src/arc/gatedAction.ts)
 - **Autonomous Agent Loop**: [`src/arc/agentLoop.ts`](src/arc/agentLoop.ts)
 
-*What to look for: hard threshold enforcement, and first-class blocked and allowed outcomes.*
+*What to look for: hard threshold enforcement and first-class FUNDING_RELEASED / FUNDING_BLOCKED outcomes with native USDC.*
 
 ---
 
@@ -477,13 +476,9 @@ bun test
 ```
 
 ```
-✓ tests/confidentialScorer.test.ts   (5 tests)  - Pure-math scoring, privacy boundary, attestation
-✓ tests/graphRobustness.test.ts      (11 tests) - Subgraph queries, schema mapping, NL router, aggregator
-✓ tests/apiServer.test.ts            (11 tests) - API endpoints, SQLite persistence, rate limiting
-✓ tests/arcAgentLoop.test.ts         (7 tests)  - Live Arc RPC balance, allow/deny gating, agent loop
-✓ tests/endToEndValidation.test.ts   (11 tests) - End-to-end Graph -> TEE -> Arc flow & policy gating
-✓ tests/phase7Integration.test.ts    (8 tests)  - Multi-layer connectivity, consecutive scenarios A/B, performance
-✓ tests/privatesignal.test.ts        (5 tests)  - CRE workflow configuration, Base64 roundtrip, calldata
+✓ tests/testing3.test.ts   (124 tests) - Full integrated suite covering confidential scoring,
+                                         Graph robustness, API endpoints, Arc agent loop,
+                                         end-to-end policy gating, and CRE workflow
 
-Total: 66 pass, 0 fail
+Total: 124 pass, 0 fail
 ```

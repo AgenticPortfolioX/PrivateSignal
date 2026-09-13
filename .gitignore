@@ -22,6 +22,7 @@ buildprivatesignal.jsonl
 *.wasm
 .cre_build_tmp.js
 binary.wasm
+*.wasm.br.b64
 .next/
 **/node_modules/
 out/
@@ -39,9 +40,19 @@ Thumbs.db
 !.vscode/settings.json
 !.vscode/tasks.json
 
-# Agent & Assistant configs
+# Agent & Assistant internal workspace files (not product)
 CLAUDE.md
 claude.md
 gemini.md
 GEMINI.md
 .claude/
+agent_skills_config.json
+scaffold_cre.ps1
+payload.json
+.agents/
+
+# Temporary build prompt files
+build/*.txt
+build/*.jsonl
+build/tidy*
+build/demo
